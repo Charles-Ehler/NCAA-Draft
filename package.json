@@ -1,0 +1,12 @@
+{
+  "name": "ncaa-draft",
+  "version": "1.0.0",
+  "description": "NCAA Tournament Fantasy Draft — KU Edition",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

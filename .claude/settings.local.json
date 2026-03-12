@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm start:*)",
+      "Bash(sleep 1 && curl -s http://localhost:3000/api/data > /dev/null && echo \"OK\")"
+    ]
+  }
+}
