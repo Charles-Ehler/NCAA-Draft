@@ -48,8 +48,8 @@ body {
   max-width: 1200px;
   margin: 0 auto;
 }
-.header-title { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.3px; }
-.header-sub   { font-size: 0.72rem; opacity: 0.82; margin-top: 2px; letter-spacing: 0.1px; }
+.header-title { font-size: 1.35rem; font-weight: 900; letter-spacing: -0.5px; }
+.header-sub   { font-size: 0.72rem; opacity: 0.75; margin-top: 3px; letter-spacing: 0.05px; font-weight: 400; }
 .header-badge {
   background: rgba(255,255,255,0.18);
   border: 1px solid rgba(255,255,255,0.25);
