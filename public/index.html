@@ -42,6 +42,15 @@
         <span class="section-sub">5 picks per manager</span>
       </div>
 
+      <!-- ESPN toolbar -->
+      <div class="espn-toolbar">
+        <button class="btn btn-sm btn-secondary" onclick="loadTournamentTeams()" id="load-teams-btn">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"/></svg>
+          Load Tournament Teams
+        </button>
+        <span id="teams-status" class="text-xs text-muted"></span>
+      </div>
+
       <div class="prize-banner">
         <div class="prize-item">
           <div class="prize-label">Buy-In</div>
@@ -86,6 +95,16 @@
         <span class="section-title">Enter Stats</span>
         <span class="section-sub">Tap a player to edit</span>
       </div>
+
+      <!-- Sync toolbar -->
+      <div class="espn-toolbar" style="margin-bottom:16px">
+        <button class="btn btn-sm btn-secondary" onclick="syncStats()" id="sync-stats-btn">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"/></svg>
+          Sync Stats
+        </button>
+        <span id="last-sync-display" class="text-xs text-muted"></span>
+      </div>
+
       <div id="round-tabs" class="round-tabs"></div>
       <div id="stats-player-list"></div>
     </div>
@@ -133,6 +152,24 @@
 
   <!-- ══════════════════ MODALS ══════════════════ -->
 
+  <!-- Password Modal -->
+  <div id="password-modal" class="modal-overlay">
+    <div class="modal" style="max-width:320px">
+      <div class="modal-header">
+        <h3>Admin Access</h3>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:.82rem;color:var(--gray-600);margin-bottom:14px;">Enter the password to make changes.</p>
+        <input id="admin-password-input" type="password" class="form-control" placeholder="Password" autocomplete="off">
+        <div id="password-error" style="display:none;margin-top:8px;font-size:.78rem;color:var(--crimson);font-weight:600;">Wrong password — try again.</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closePasswordModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitPassword()">Unlock</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Add Player Modal -->
   <div id="add-player-modal" class="modal-overlay">
     <div class="modal">
@@ -145,6 +182,29 @@
         </button>
       </div>
       <form id="add-player-form" class="modal-body" onsubmit="event.preventDefault()">
+
+        <!-- ESPN roster section (shown when teams are loaded) -->
+        <div id="espn-player-section" style="display:none;margin-bottom:16px;padding-bottom:16px;border-bottom:2px dashed var(--gray-100);">
+          <label class="form-label" style="color:var(--blue);">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12" style="margin-right:3px;vertical-align:middle"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"/></svg>
+            Pick from Tournament Roster
+          </label>
+          <select id="p-espn-team" class="form-control" onchange="loadTeamRoster(this.value)" style="margin-bottom:8px;">
+            <option value="">Choose a team…</option>
+          </select>
+          <div id="espn-roster-loading" style="display:none;font-size:.75rem;color:var(--gray-400);margin:4px 0 8px;">Loading roster…</div>
+          <div id="espn-player-select-wrap" style="display:none;">
+            <select id="p-espn-player" class="form-control" onchange="fillPlayerFromEspn(this.value)">
+              <option value="">Choose a player…</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Manual fields (always shown, auto-filled when ESPN player is selected) -->
+        <div id="manual-fields-label" style="display:none;margin-bottom:10px;">
+          <span style="font-size:.75rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.3px;">Or enter manually</span>
+        </div>
+
         <div class="form-group">
           <label class="form-label" for="p-name">Player Name</label>
           <input id="p-name" type="text" class="form-control" placeholder="e.g. Hunter Dickinson" autocomplete="off" required>

@@ -1,5 +1,5 @@
 // ─── State ────────────────────────────────────────────────
-let appData      = { managers: [], players: [], rounds: [] };
+let appData      = { managers: [], players: [], rounds: [], tournamentTeams: [], lastSync: null };
 let currentTab   = 'draft';
 let currentRound = 1;
 let addPlayerForManagerId = null;
@@ -7,21 +7,62 @@ let statsTargetPlayerId   = null;
 let statsTargetRound      = null;
 let eliminateTargetId     = null;
 
-const ROUND_FULL = {
-  1: 'Round of 64', 2: 'Round of 32', 3: 'Sweet 16',
-  4: 'Elite 8',     5: 'Final Four',  6: 'Championship'
-};
+// ESPN roster cache (teamId → [{name, position}])
+let rosterCache = {};
+
+const ROUND_FULL  = { 1:'Round of 64', 2:'Round of 32', 3:'Sweet 16', 4:'Elite 8', 5:'Final Four', 6:'Championship' };
 const ROUND_SHORT = { 1:'R64', 2:'R32', 3:'S16', 4:'E8', 5:'F4', 6:'Champ' };
 
-// ─── Scoring ──────────────────────────────────────────────
+// Round keywords for ESPN round detection
+const ROUND_KEYWORDS = [
+  { rx: /round of 64|first round|first four/i,               num: 1 },
+  { rx: /round of 32|second round/i,                         num: 2 },
+  { rx: /sweet 16|sweet sixteen|regional semifinal/i,        num: 3 },
+  { rx: /elite 8|elite eight|regional (final|championship)/i,num: 4 },
+  { rx: /final four|national semifinal/i,                    num: 5 },
+  { rx: /national championship|championship game/i,          num: 6 }
+];
 
+// ─── Admin / Password ──────────────────────────────────────
+let adminUnlocked        = false;
+let pendingAdminCallback = null;
+const ADMIN_PASS         = '1234';
+
+function requireAdmin(callback) {
+  if (adminUnlocked) { callback(); return; }
+  pendingAdminCallback = callback;
+  document.getElementById('admin-password-input').value = '';
+  document.getElementById('password-error').style.display = 'none';
+  document.getElementById('password-modal').classList.add('open');
+  setTimeout(() => document.getElementById('admin-password-input').focus(), 60);
+}
+
+function submitPassword() {
+  const val = document.getElementById('admin-password-input').value;
+  if (val === ADMIN_PASS) {
+    adminUnlocked = true;
+    closePasswordModal();
+    if (pendingAdminCallback) { pendingAdminCallback(); pendingAdminCallback = null; }
+  } else {
+    document.getElementById('password-error').style.display = 'block';
+    document.getElementById('admin-password-input').value   = '';
+    document.getElementById('admin-password-input').focus();
+  }
+}
+
+function closePasswordModal() {
+  document.getElementById('password-modal').classList.remove('open');
+  pendingAdminCallback = null;
+}
+
+// ─── Scoring ──────────────────────────────────────────────
 function calcRoundScore(stat, multiplier) {
   const base =
-    (stat.points    || 0) * 1    +
-    (stat.rebounds  || 0) * 1.2  +
-    (stat.assists   || 0) * 1.5  +
-    (stat.blocks    || 0) * 2    +
-    (stat.steals    || 0) * 2    +
+    (stat.points    || 0) * 1   +
+    (stat.rebounds  || 0) * 1.2 +
+    (stat.assists   || 0) * 1.5 +
+    (stat.blocks    || 0) * 2   +
+    (stat.steals    || 0) * 2   +
     (stat.turnovers || 0) * -1;
   return base * multiplier;
 }
@@ -47,7 +88,6 @@ function calcManagerScore(managerId) {
 function round1(n) { return Math.round(n * 10) / 10; }
 
 // ─── API ──────────────────────────────────────────────────
-
 async function api(method, path, body) {
   const res = await fetch('/api' + path, {
     method,
@@ -62,14 +102,16 @@ async function api(method, path, body) {
 async function loadData(silent = false) {
   try {
     appData = await api('GET', '/data');
+    // Merge roster cache with any tournamentTeams stored server-side
     renderAll();
+    updateLastSyncDisplay();
+    updateTeamsStatus();
   } catch (e) {
     if (!silent) showToast('Could not load data', true);
   }
 }
 
 // ─── Navigation ───────────────────────────────────────────
-
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -80,7 +122,6 @@ function switchTab(tab) {
 }
 
 // ─── Render All ───────────────────────────────────────────
-
 function renderAll() {
   renderDraft();
   renderLeaderboard();
@@ -89,7 +130,6 @@ function renderAll() {
 }
 
 // ─── DRAFT TAB ────────────────────────────────────────────
-
 function renderDraft() {
   const grid = document.getElementById('draft-grid');
   grid.innerHTML = appData.managers.map(manager => {
@@ -121,7 +161,7 @@ function renderDraft() {
 function playerItemHTML(p, showDelete = false) {
   const score    = calcPlayerScore(p);
   const isDouble = p.seed >= 9;
-  const scoreStr = (score !== 0) ? `${score}` : '—';
+  const scoreStr = score !== 0 ? `${score}` : '—';
   return `
     <div class="player-item ${p.eliminated ? 'eliminated' : ''}">
       <span class="seed-badge ${isDouble ? 'double' : ''}" title="${isDouble ? '2× points (seed 9-16)' : `Seed ${p.seed}`}">${p.seed}</span>
@@ -140,7 +180,6 @@ function playerItemHTML(p, showDelete = false) {
 }
 
 // ─── LEADERBOARD TAB ──────────────────────────────────────
-
 function renderLeaderboard() {
   const standings = appData.managers
     .map(m => ({ ...m, score: calcManagerScore(m.id), players: appData.players.filter(p => p.managerId === m.id) }))
@@ -149,9 +188,9 @@ function renderLeaderboard() {
   const prizes = { 1: '1st · $200', 2: '2nd · $50' };
 
   document.getElementById('leaderboard-content').innerHTML = standings.map((m, i) => {
-    const rank = i + 1;
+    const rank      = i + 1;
     const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
-    const prize = prizes[rank] || '';
+    const prize     = prizes[rank] || '';
     return `
       <div class="card lb-card">
         <div class="lb-card-header" onclick="toggleLbPlayers('lb-players-${m.id}')">
@@ -180,9 +219,7 @@ function toggleLbPlayers(id) {
 }
 
 // ─── STATS TAB ────────────────────────────────────────────
-
 function renderStats() {
-  // Round tabs
   document.getElementById('round-tabs').innerHTML = [1,2,3,4,5,6].map(r => `
     <button class="round-tab ${r === currentRound ? 'active' : ''}" onclick="selectRound(${r})">${ROUND_FULL[r]}</button>
   `).join('');
@@ -204,9 +241,7 @@ function renderStats() {
         const stat     = roundData?.stats.find(s => s.playerId === p.id);
         const hasStats = !!stat;
         const isDouble = p.seed >= 9;
-        const roundPts = hasStats
-          ? round1(calcRoundScore(stat, p.seed >= 9 ? 2 : 1))
-          : null;
+        const roundPts = hasStats ? round1(calcRoundScore(stat, isDouble ? 2 : 1)) : null;
         return `
           <div class="stats-player-item" onclick="openStatsModal('${p.id}', ${currentRound})">
             <span class="seed-badge ${isDouble ? 'double' : ''}">${p.seed}</span>
@@ -236,7 +271,6 @@ function selectRound(r) {
 }
 
 // ─── STATUS TAB ───────────────────────────────────────────
-
 function renderStatus() {
   const container = document.getElementById('status-content');
 
@@ -300,26 +334,48 @@ function renderStatus() {
 
 // ─── ADD PLAYER MODAL ─────────────────────────────────────
 
+// Public entry point — gated by admin
 function openAddPlayer(managerId) {
+  requireAdmin(() => _openAddPlayer(managerId));
+}
+
+function _openAddPlayer(managerId) {
   addPlayerForManagerId = managerId;
   const mgr = appData.managers.find(m => m.id === managerId);
   document.getElementById('add-player-title').textContent = `Add Player — ${mgr.name}`;
   document.getElementById('add-player-form').reset();
-  document.getElementById('double-warning').style.display = 'none';
+  document.getElementById('double-warning').style.display   = 'none';
+
+  // ESPN section
+  const teams      = appData.tournamentTeams || [];
+  const espnSection = document.getElementById('espn-player-section');
+  const manualLabel = document.getElementById('manual-fields-label');
+
+  if (teams.length > 0) {
+    espnSection.style.display = 'block';
+    manualLabel.style.display = 'block';
+
+    const teamSel = document.getElementById('p-espn-team');
+    teamSel.innerHTML = '<option value="">Choose a team…</option>' +
+      teams.map(t => `<option value="${esc(t.id)}">Seed ${t.seed} — ${esc(t.name)}</option>`).join('');
+
+    document.getElementById('espn-player-select-wrap').style.display = 'none';
+    document.getElementById('espn-roster-loading').style.display     = 'none';
+  } else {
+    espnSection.style.display = 'none';
+    manualLabel.style.display = 'none';
+  }
+
   document.getElementById('add-player-modal').classList.add('open');
-  setTimeout(() => document.getElementById('p-name').focus(), 60);
+  const firstFocus = teams.length > 0
+    ? document.getElementById('p-espn-team')
+    : document.getElementById('p-name');
+  setTimeout(() => firstFocus.focus(), 60);
 }
+
 function closeAddPlayer() {
   document.getElementById('add-player-modal').classList.remove('open');
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('p-seed').addEventListener('input', function () {
-    const v = parseInt(this.value);
-    document.getElementById('double-warning').style.display =
-      (v >= 9 && v <= 16) ? 'block' : 'none';
-  });
-});
 
 async function submitAddPlayer() {
   const name     = document.getElementById('p-name').value.trim();
@@ -344,9 +400,364 @@ async function submitAddPlayer() {
   }
 }
 
+// ─── ESPN: Load Tournament Teams ───────────────────────────
+
+function loadTournamentTeams() {
+  requireAdmin(async () => {
+    const btn = document.getElementById('load-teams-btn');
+    btn.disabled    = true;
+    btn.textContent = 'Loading…';
+    document.getElementById('teams-status').textContent = '';
+
+    try {
+      showToast('Fetching tournament bracket from ESPN…');
+      const raw = await fetch('/api/espn/bracket').then(r => r.json());
+      if (raw.error) throw new Error(raw.error);
+
+      const teams = parseBracketTeams(raw);
+      if (teams.length === 0) throw new Error('No tournament teams found in ESPN response. The bracket may not be published yet.');
+
+      // Save to server so it persists
+      await api('PUT', '/meta', { tournamentTeams: teams });
+      appData.tournamentTeams = teams;
+
+      updateTeamsStatus();
+      showToast(`Loaded ${teams.length} tournament teams`);
+      renderDraft(); // refresh Add Player buttons
+    } catch (e) {
+      showToast('ESPN bracket: ' + e.message, true);
+      document.getElementById('teams-status').textContent = 'Load failed — manual entry still works';
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Load Tournament Teams';
+    }
+  });
+}
+
+// Flexible recursive bracket parser — handles any ESPN API structure
+function parseBracketTeams(data) {
+  const teams = new Map();
+
+  function traverse(obj) {
+    if (!obj || typeof obj !== 'object') return;
+    if (Array.isArray(obj)) { obj.forEach(traverse); return; }
+
+    // Match: object with team.id + team.displayName + seed
+    if (obj.team?.id && (obj.team.displayName || obj.team.name) && obj.seed !== undefined) {
+      const id = String(obj.team.id);
+      if (!teams.has(id)) {
+        teams.set(id, {
+          id,
+          name:      obj.team.displayName || obj.team.name,
+          shortName: obj.team.abbreviation || obj.team.shortDisplayName || obj.team.displayName || obj.team.name,
+          seed:      parseInt(obj.seed) || 0
+        });
+      }
+    }
+
+    // Also match: competitor-style objects { id, seed, team: { id, displayName } }
+    if (obj.id && obj.seed && obj.team?.id && (obj.team.displayName || obj.team.name)) {
+      const id = String(obj.team.id);
+      if (!teams.has(id)) {
+        teams.set(id, {
+          id,
+          name:      obj.team.displayName || obj.team.name,
+          shortName: obj.team.abbreviation || obj.team.shortDisplayName || obj.team.name,
+          seed:      parseInt(obj.seed) || 0
+        });
+      }
+    }
+
+    for (const val of Object.values(obj)) {
+      if (val && typeof val === 'object') traverse(val);
+    }
+  }
+
+  traverse(data);
+
+  return [...teams.values()]
+    .filter(t => t.seed >= 1 && t.seed <= 16)
+    .sort((a, b) => a.seed - b.seed || a.name.localeCompare(b.name));
+}
+
+function updateTeamsStatus() {
+  const teams  = appData.tournamentTeams || [];
+  const el     = document.getElementById('teams-status');
+  if (!el) return;
+  el.textContent = teams.length > 0 ? `${teams.length} teams loaded` : '';
+}
+
+// ─── ESPN: Load Team Roster ────────────────────────────────
+
+async function loadTeamRoster(teamId) {
+  document.getElementById('espn-player-select-wrap').style.display = 'none';
+  document.getElementById('espn-roster-loading').style.display     = 'none';
+
+  if (!teamId) return;
+
+  // Auto-fill team name + seed from loaded teams
+  const team = (appData.tournamentTeams || []).find(t => t.id === teamId);
+  if (team) {
+    document.getElementById('p-team').value = team.name;
+    document.getElementById('p-seed').value = team.seed;
+    document.getElementById('double-warning').style.display = team.seed >= 9 ? 'block' : 'none';
+  }
+
+  // Use cache if available
+  if (rosterCache[teamId]) {
+    populatePlayerSelect(rosterCache[teamId]);
+    return;
+  }
+
+  document.getElementById('espn-roster-loading').style.display = 'block';
+
+  try {
+    const raw = await fetch(`/api/espn/roster/${teamId}`).then(r => r.json());
+    if (raw.error) throw new Error(raw.error);
+
+    const players        = parseRoster(raw);
+    rosterCache[teamId]  = players;
+    populatePlayerSelect(players);
+  } catch (e) {
+    document.getElementById('espn-roster-loading').style.display = 'none';
+    showToast('Could not load roster: ' + e.message, true);
+  }
+}
+
+function parseRoster(data) {
+  // ESPN roster response: { athletes: [...] }
+  const athletes = data.athletes || data.roster?.athletes || [];
+  return athletes
+    .filter(a => a.displayName || a.fullName || a.name)
+    .map(a => ({
+      name:     a.displayName || `${a.firstName || ''} ${a.lastName || ''}`.trim() || a.name,
+      position: a.position?.abbreviation || a.position?.name || '?',
+      jersey:   a.jersey || ''
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function populatePlayerSelect(players) {
+  document.getElementById('espn-roster-loading').style.display = 'none';
+
+  const sel = document.getElementById('p-espn-player');
+  sel.innerHTML = '<option value="">Choose a player…</option>' +
+    players.map((p, i) => `<option value="${i}">#${p.jersey ? p.jersey + ' ' : ''}${esc(p.name)} — ${esc(p.position)}</option>`).join('');
+
+  document.getElementById('espn-player-select-wrap').style.display = 'block';
+}
+
+function fillPlayerFromEspn(idx) {
+  if (idx === '') return;
+  const teamId  = document.getElementById('p-espn-team').value;
+  const players = rosterCache[teamId];
+  if (!players) return;
+
+  const player = players[parseInt(idx)];
+  if (!player) return;
+
+  document.getElementById('p-name').value = player.name;
+
+  // Map ESPN position to our select options
+  const pos     = player.position.toUpperCase();
+  const posMap  = { G: 'G', PG: 'PG', SG: 'SG', F: 'F', SF: 'SF', PF: 'PF', C: 'C' };
+  const mapped  = posMap[pos] || (pos.includes('G') ? 'G' : pos.includes('F') ? 'F' : pos.includes('C') ? 'C' : '');
+  const posEl   = document.getElementById('p-pos');
+  if (mapped && [...posEl.options].some(o => o.value === mapped)) posEl.value = mapped;
+}
+
+// ─── ESPN: Sync Stats ──────────────────────────────────────
+
+function syncStats() {
+  requireAdmin(() => _doSync());
+}
+
+// Silent background sync (no password prompt — only called when already unlocked)
+async function autoSyncStats() {
+  if (!adminUnlocked) return;
+  try { await _doSync(true); } catch (e) { console.warn('Auto-sync failed:', e); }
+}
+
+async function _doSync(silent = false) {
+  const btn = document.getElementById('sync-stats-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+
+  try {
+    if (!silent) showToast('Syncing stats from ESPN…');
+
+    const scoreboard = await fetch('/api/espn/scoreboard').then(r => r.json());
+    if (scoreboard.error) throw new Error(scoreboard.error);
+
+    const events = (scoreboard.events || []).filter(e =>
+      e.status?.type?.completed && isTournamentEvent(e)
+    );
+
+    if (events.length === 0) {
+      if (!silent) showToast('No completed tournament games found today');
+      return;
+    }
+
+    let totalSynced = 0;
+
+    for (const event of events) {
+      const round = extractRound(event);
+      if (!round) continue;
+
+      try {
+        const summary = await fetch(`/api/espn/summary/${event.id}`).then(r => r.json());
+        if (summary.error) continue;
+        totalSynced += await applyGameStats(summary, round);
+      } catch (err) {
+        console.warn(`Failed to sync game ${event.id}:`, err);
+      }
+    }
+
+    const now = new Date().toISOString();
+    await api('PUT', '/meta', { lastSync: now });
+    appData.lastSync = now;
+
+    await loadData(true);
+    updateLastSyncDisplay();
+
+    if (!silent) showToast(`Synced stats for ${totalSynced} player(s)`);
+    else if (totalSynced > 0) showToast(`Auto-synced ${totalSynced} player stat(s)`);
+
+  } catch (e) {
+    if (!silent) showToast('Sync failed: ' + e.message, true);
+    else console.warn('Background sync failed:', e);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Sync Stats'; }
+  }
+}
+
+// Parse box score from ESPN game summary and save matched stats
+async function applyGameStats(summary, round) {
+  // ESPN summary.boxscore.players: array of team box scores
+  // Each has .team and .statistics[].{ keys, athletes[].{ athlete, stats[] } }
+  const boxPlayers = [];
+
+  for (const teamBox of summary.boxscore?.players || []) {
+    for (const statGroup of teamBox.statistics || []) {
+      const keys = statGroup.keys || [];
+      for (const entry of statGroup.athletes || []) {
+        const stats = entry.stats || [];
+        const row   = { name: entry.athlete?.displayName || '', parsed: {} };
+
+        // Map stat keys to values
+        keys.forEach((key, i) => {
+          const val = parseFloat(stats[i]);
+          row.parsed[key.toUpperCase()] = isNaN(val) ? 0 : val;
+        });
+
+        boxPlayers.push(row);
+      }
+    }
+  }
+
+  let count = 0;
+  for (const player of appData.players) {
+    const match = boxPlayers.find(bp => namesMatch(bp.name, player.name));
+    if (!match) continue;
+
+    const p = match.parsed;
+    const stats = {
+      points:    p['PTS']  || 0,
+      rebounds:  p['REB']  || p['DREB'] + (p['OREB'] || 0) || 0,
+      assists:   p['AST']  || 0,
+      blocks:    p['BLK']  || 0,
+      steals:    p['STL']  || 0,
+      turnovers: p['TO']   || p['TOV'] || 0
+    };
+
+    // Skip if player clearly didn't play (all zeros — DNP)
+    if (Object.values(stats).every(v => v === 0)) continue;
+
+    try {
+      await api('POST', '/stats', { round, playerId: player.id, stats });
+      count++;
+    } catch (err) {
+      console.warn(`Failed to save stats for ${player.name}:`, err);
+    }
+  }
+
+  return count;
+}
+
+// Fuzzy name matching (case-insensitive, handles abbreviated first names)
+function namesMatch(espnName, draftName) {
+  const norm = s => (s || '').toLowerCase().replace(/[^a-z ]/g, '').trim();
+  const a = norm(espnName);
+  const b = norm(draftName);
+  if (!a || !b) return false;
+  if (a === b)  return true;
+
+  // Check last name match + first initial or partial first
+  const [aFirst, ...aRest] = a.split(' ');
+  const [bFirst, ...bRest] = b.split(' ');
+  const aLast = aRest.join(' ');
+  const bLast = bRest.join(' ');
+
+  if (aLast && bLast && aLast === bLast) {
+    // Last names match — check first name initial or prefix
+    return aFirst[0] === bFirst[0];
+  }
+
+  return a.includes(b) || b.includes(a);
+}
+
+function isTournamentEvent(event) {
+  // NCAA Tournament is season type 3 in ESPN's system
+  if (event.season?.type === 3 || event.season?.type === '3') return true;
+
+  // Check event notes or name for tournament keywords
+  const notes = event.competitions?.[0]?.notes || [];
+  const note  = notes.map(n => n.headline || '').join(' ').toLowerCase();
+  const name  = (event.name || event.shortName || '').toLowerCase();
+  return /ncaa|tournament|march madness/.test(note) || /ncaa|tournament/.test(name);
+}
+
+function extractRound(event) {
+  const notes = (event.competitions?.[0]?.notes || []).map(n => n.headline || '').join(' ');
+  const name  = event.name || event.shortName || '';
+  const text  = notes + ' ' + name;
+
+  for (const { rx, num } of ROUND_KEYWORDS) {
+    if (rx.test(text)) return num;
+  }
+
+  // Fallback: try season note
+  const seasonNote = event.season?.displayName || '';
+  for (const { rx, num } of ROUND_KEYWORDS) {
+    if (rx.test(seasonNote)) return num;
+  }
+
+  return null;
+}
+
+// ─── Last Sync Display ─────────────────────────────────────
+function updateLastSyncDisplay() {
+  const el = document.getElementById('last-sync-display');
+  if (!el) return;
+  const ts = appData.lastSync;
+  if (!ts) { el.textContent = 'Never synced'; return; }
+
+  const d   = new Date(ts);
+  const now = new Date();
+  const diffMin = Math.round((now - d) / 60000);
+
+  if (diffMin < 1)        el.textContent = 'Just synced';
+  else if (diffMin < 60)  el.textContent = `Synced ${diffMin}m ago`;
+  else                    el.textContent = `Synced ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+}
+
 // ─── STATS MODAL ──────────────────────────────────────────
 
+// Public entry point — gated by admin
 function openStatsModal(playerId, round) {
+  requireAdmin(() => _openStatsModal(playerId, round));
+}
+
+function _openStatsModal(playerId, round) {
   statsTargetPlayerId = playerId;
   statsTargetRound    = round;
 
@@ -363,13 +774,13 @@ function openStatsModal(playerId, round) {
     document.getElementById(`s-${f}`).value = existing ? (existing[keys[i]] ?? '') : '';
   });
 
-  // Show/hide "Clear Stats" button
   document.getElementById('clear-stats-btn').style.display = existing ? 'flex' : 'none';
 
   updateScorePreview();
   document.getElementById('stats-modal').classList.add('open');
   setTimeout(() => document.getElementById('s-pts').focus(), 60);
 }
+
 function closeStatsModal() {
   document.getElementById('stats-modal').classList.remove('open');
 }
@@ -388,16 +799,16 @@ function updateScorePreview() {
   const total      = round1(base * multiplier);
 
   const breakdown = [
-    pts  ? `${pts} pts`                         : '',
-    reb  ? `${round1(reb * 1.2)} from reb`      : '',
-    ast  ? `${round1(ast * 1.5)} from ast`      : '',
-    blk  ? `${round1(blk * 2)} from blk`        : '',
-    stl  ? `${round1(stl * 2)} from stl`        : '',
-    to   ? `−${to} from TO`                     : ''
+    pts ? `${pts} pts`                    : '',
+    reb ? `${round1(reb * 1.2)} from reb` : '',
+    ast ? `${round1(ast * 1.5)} from ast` : '',
+    blk ? `${round1(blk * 2)} from blk`  : '',
+    stl ? `${round1(stl * 2)} from stl`  : '',
+    to  ? `−${to} from TO`               : ''
   ].filter(Boolean).join(' · ') || 'No stats yet';
 
   document.getElementById('score-preview').innerHTML = `
-    <div class="score-preview-label">${multiplier > 1 ? `Seed ${player?.seed} — 2× multiplier applied · ` : ''}Base: ${round1(base)} pts</div>
+    <div class="score-preview-label">${multiplier > 1 ? `Seed ${player?.seed} — 2× multiplier · ` : ''}Base: ${round1(base)} pts</div>
     <div class="score-preview-total">${total} fantasy pts</div>
     <div class="score-preview-breakdown">${breakdown}</div>
   `;
@@ -436,16 +847,23 @@ async function clearStats() {
 
 // ─── ELIMINATE MODAL ──────────────────────────────────────
 
+// Gated by admin
 function openEliminateModal(playerId) {
+  requireAdmin(() => _openEliminateModal(playerId));
+}
+
+function _openEliminateModal(playerId) {
   eliminateTargetId = playerId;
   const p = appData.players.find(pl => pl.id === playerId);
-  document.getElementById('eliminate-title').textContent = `Eliminate ${p.name}`;
-  document.getElementById('eliminate-round').value = '';
+  document.getElementById('eliminate-title').textContent  = `Eliminate ${p.name}`;
+  document.getElementById('eliminate-round').value        = '';
   document.getElementById('eliminate-modal').classList.add('open');
 }
+
 function closeEliminateModal() {
   document.getElementById('eliminate-modal').classList.remove('open');
 }
+
 async function confirmEliminate() {
   const round = parseInt(document.getElementById('eliminate-round').value);
   if (!round) { showToast('Select the round they were eliminated', true); return; }
@@ -458,56 +876,70 @@ async function confirmEliminate() {
     showToast(e.message, true);
   }
 }
-async function restorePlayer(playerId) {
-  try {
-    await api('PUT', `/players/${playerId}`, { eliminated: false, eliminatedRound: null });
-    await loadData(true);
-    showToast('Player restored');
-  } catch (e) {
-    showToast(e.message, true);
-  }
+
+// Gated by admin
+function restorePlayer(playerId) {
+  requireAdmin(async () => {
+    try {
+      await api('PUT', `/players/${playerId}`, { eliminated: false, eliminatedRound: null });
+      await loadData(true);
+      showToast('Player restored');
+    } catch (e) {
+      showToast(e.message, true);
+    }
+  });
 }
 
 // ─── REMOVE PLAYER ────────────────────────────────────────
 
-async function removePlayer(playerId) {
-  const p = appData.players.find(pl => pl.id === playerId);
-  if (!confirm(`Remove ${p?.name || 'this player'} from the draft? This cannot be undone.`)) return;
-  try {
-    await api('DELETE', `/players/${playerId}`);
-    await loadData(true);
-    showToast('Player removed');
-  } catch (e) {
-    showToast(e.message, true);
-  }
+function removePlayer(playerId) {
+  requireAdmin(async () => {
+    const p = appData.players.find(pl => pl.id === playerId);
+    if (!confirm(`Remove ${p?.name || 'this player'} from the draft? This cannot be undone.`)) return;
+    try {
+      await api('DELETE', `/players/${playerId}`);
+      await loadData(true);
+      showToast('Player removed');
+    } catch (e) {
+      showToast(e.message, true);
+    }
+  });
 }
 
 // ─── TOAST ────────────────────────────────────────────────
-
 let toastTimer;
 function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast' + (isError ? ' error' : '');
+  t.className   = 'toast' + (isError ? ' error' : '');
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
 // ─── UTILS ────────────────────────────────────────────────
-
 function esc(str) {
   const d = document.createElement('div');
   d.textContent = str || '';
   return d.innerHTML;
 }
 
-// ─── INIT ─────────────────────────────────────────────────
+// Tournament hours: noon–midnight CT (CDT = UTC-5)
+function isTournamentHours() {
+  const now    = new Date();
+  const ctHour = (now.getUTCHours() - 5 + 24) % 24;
+  return ctHour >= 12;
+}
 
+// ─── INIT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
-  // Refresh every 30s for live scores
-  setInterval(() => loadData(true), 30000);
+
+  // Auto-refresh every 5 minutes; ESPN sync if tournament hours + admin unlocked
+  setInterval(() => {
+    loadData(true);
+    if (isTournamentHours()) autoSyncStats();
+  }, 5 * 60 * 1000);
 
   // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -516,8 +948,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Enter key in add-player form
+  // Password modal — Enter key
+  document.getElementById('admin-password-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); submitPassword(); }
+  });
+
+  // Add-player form — Enter key
   document.getElementById('add-player-form').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); submitAddPlayer(); }
+  });
+
+  // Seed change → double-points warning
+  document.getElementById('p-seed').addEventListener('input', function () {
+    const v = parseInt(this.value);
+    document.getElementById('double-warning').style.display =
+      (v >= 9 && v <= 16) ? 'block' : 'none';
   });
 });

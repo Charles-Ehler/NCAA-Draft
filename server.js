@@ -1,6 +1,7 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
+const fs      = require('fs');
+const path    = require('path');
+const https   = require('https');
 
 const app = express();
 app.use(express.json());
@@ -16,17 +17,15 @@ const INITIAL_DATA = {
     { id: 'matt',    name: 'Matt' },
     { id: 'andy',    name: 'Andy' }
   ],
-  players: [],
-  rounds: []
+  players:         [],
+  rounds:          [],
+  tournamentTeams: [],
+  lastSync:        null
 };
 
 const ROUND_NAMES = {
-  1: 'Round of 64',
-  2: 'Round of 32',
-  3: 'Sweet 16',
-  4: 'Elite 8',
-  5: 'Final Four',
-  6: 'Championship'
+  1: 'Round of 64', 2: 'Round of 32', 3: 'Sweet 16',
+  4: 'Elite 8',     5: 'Final Four',  6: 'Championship'
 };
 
 function getData() {
@@ -41,41 +40,123 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// GET all data
+// ── ESPN proxy helper ──────────────────────────────────────
+function espnFetch(url) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const opts   = {
+      hostname: parsed.hostname,
+      path:     parsed.pathname + parsed.search,
+      headers:  { 'User-Agent': 'Mozilla/5.0 (compatible; NCAAdraft/1.0)' }
+    };
+    const req = https.get(opts, res => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode !== 200)
+          return reject(new Error(`ESPN returned HTTP ${res.statusCode}`));
+        try   { resolve(JSON.parse(body)); }
+        catch { reject(new Error('Invalid JSON from ESPN')); }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(12000, () => { req.destroy(); reject(new Error('ESPN timed out')); });
+  });
+}
+
+// ── ESPN proxy routes ──────────────────────────────────────
+
+// Tournament bracket (teams + seeds)
+app.get('/api/espn/bracket', async (req, res) => {
+  try {
+    const data = await espnFetch(
+      'https://site.api.espn.com/apis/v2/sports/basketball/mens-college-basketball/tournaments'
+    );
+    res.json(data);
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+// Team roster
+app.get('/api/espn/roster/:teamId', async (req, res) => {
+  try {
+    const data = await espnFetch(
+      `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/${encodeURIComponent(req.params.teamId)}/roster`
+    );
+    res.json(data);
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+// Live scoreboard (optionally pass ?dates=YYYYMMDD)
+app.get('/api/espn/scoreboard', async (req, res) => {
+  try {
+    const dateParam = req.query.dates ? `&dates=${req.query.dates}` : '';
+    const data = await espnFetch(
+      `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?limit=200&groups=100${dateParam}`
+    );
+    res.json(data);
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+// Game summary / box score
+app.get('/api/espn/summary/:eventId', async (req, res) => {
+  try {
+    const data = await espnFetch(
+      `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/summary?event=${encodeURIComponent(req.params.eventId)}`
+    );
+    res.json(data);
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+// ── Meta (tournament teams cache + last sync time) ─────────
+app.put('/api/meta', (req, res) => {
+  const data    = getData();
+  const allowed = ['tournamentTeams', 'lastSync'];
+  for (const key of allowed) {
+    if (key in req.body) data[key] = req.body[key];
+  }
+  saveData(data);
+  res.json({ success: true });
+});
+
+// ── Existing data routes ───────────────────────────────────
+
 app.get('/api/data', (req, res) => {
   res.json(getData());
 });
 
-// POST add player to draft
 app.post('/api/players', (req, res) => {
   const data = getData();
   const { name, team, seed, position, managerId } = req.body;
 
-  if (!name || !team || !seed || !position || !managerId) {
+  if (!name || !team || !seed || !position || !managerId)
     return res.status(400).json({ error: 'All fields are required' });
-  }
 
   const manager = data.managers.find(m => m.id === managerId);
   if (!manager) return res.status(400).json({ error: 'Manager not found' });
 
-  const managerPlayers = data.players.filter(p => p.managerId === managerId);
-  if (managerPlayers.length >= 5) {
+  if (data.players.filter(p => p.managerId === managerId).length >= 5)
     return res.status(400).json({ error: `${manager.name} already has 5 players` });
-  }
 
   const seedNum = parseInt(seed);
-  if (isNaN(seedNum) || seedNum < 1 || seedNum > 16) {
+  if (isNaN(seedNum) || seedNum < 1 || seedNum > 16)
     return res.status(400).json({ error: 'Seed must be between 1 and 16' });
-  }
 
   const player = {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-    name: name.trim(),
-    team: team.trim(),
-    seed: seedNum,
-    position: position.trim().toUpperCase(),
+    id:             Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    name:           name.trim(),
+    team:           team.trim(),
+    seed:           seedNum,
+    position:       position.trim().toUpperCase(),
     managerId,
-    eliminated: false,
+    eliminated:     false,
     eliminatedRound: null
   };
 
@@ -84,45 +165,37 @@ app.post('/api/players', (req, res) => {
   res.json(player);
 });
 
-// PUT update player (eliminated status, etc.)
 app.put('/api/players/:id', (req, res) => {
-  const data = getData();
+  const data   = getData();
   const player = data.players.find(p => p.id === req.params.id);
   if (!player) return res.status(404).json({ error: 'Player not found' });
 
-  const allowed = ['eliminated', 'eliminatedRound'];
-  for (const key of allowed) {
+  for (const key of ['eliminated', 'eliminatedRound']) {
     if (key in req.body) player[key] = req.body[key];
   }
-
   saveData(data);
   res.json(player);
 });
 
-// DELETE remove player from draft
 app.delete('/api/players/:id', (req, res) => {
   const data = getData();
-  const idx = data.players.findIndex(p => p.id === req.params.id);
+  const idx  = data.players.findIndex(p => p.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Player not found' });
 
   data.players.splice(idx, 1);
-  // Remove stats for this player
   for (const round of data.rounds) {
     round.stats = round.stats.filter(s => s.playerId !== req.params.id);
   }
-
   saveData(data);
   res.json({ success: true });
 });
 
-// POST save/update stats for a player in a round
 app.post('/api/stats', (req, res) => {
   const data = getData();
   const { round, playerId, stats } = req.body;
 
-  if (!round || !playerId || !stats) {
+  if (!round || !playerId || !stats)
     return res.status(400).json({ error: 'round, playerId, and stats are required' });
-  }
 
   let roundData = data.rounds.find(r => r.round === round);
   if (!roundData) {
@@ -142,27 +215,22 @@ app.post('/api/stats', (req, res) => {
   };
 
   const existingIdx = roundData.stats.findIndex(s => s.playerId === playerId);
-  if (existingIdx >= 0) {
-    roundData.stats[existingIdx] = entry;
-  } else {
-    roundData.stats.push(entry);
-  }
+  if (existingIdx >= 0) roundData.stats[existingIdx] = entry;
+  else                  roundData.stats.push(entry);
 
   saveData(data);
   res.json({ success: true });
 });
 
-// DELETE remove stats for a player in a round
 app.delete('/api/stats/:round/:playerId', (req, res) => {
-  const data = getData();
-  const roundNum = parseInt(req.params.round);
+  const data      = getData();
+  const roundNum  = parseInt(req.params.round);
   const roundData = data.rounds.find(r => r.round === roundNum);
 
   if (roundData) {
     roundData.stats = roundData.stats.filter(s => s.playerId !== req.params.playerId);
     saveData(data);
   }
-
   res.json({ success: true });
 });
 

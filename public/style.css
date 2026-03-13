@@ -206,6 +206,15 @@ main {
 }
 .scoring-info .double-pts { color: var(--crimson); font-weight: 700; }
 
+/* ──────────────── ESPN TOOLBAR ──────────────── */
+
+.espn-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
 /* ──────────────── DRAFT GRID ──────────────── */
 
 .draft-grid {
