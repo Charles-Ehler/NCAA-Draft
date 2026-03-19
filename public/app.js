@@ -132,20 +132,31 @@ function renderAll() {
 // ─── DRAFT TAB ────────────────────────────────────────────
 function renderDraft() {
   const grid = document.getElementById('draft-grid');
-  grid.innerHTML = appData.managers.map(manager => {
-    const players = appData.players.filter(p => p.managerId === manager.id);
-    const canAdd  = players.length < 5;
+
+  // Find leader score for highlighting
+  const scores = appData.managers.map(m => calcManagerScore(m.id));
+  const maxScore = Math.max(...scores, 0);
+
+  grid.innerHTML = appData.managers.map((manager, cardIdx) => {
+    const players   = appData.players.filter(p => p.managerId === manager.id);
+    const canAdd    = players.length < 5;
+    const score     = scores[cardIdx];
+    const isLeader  = maxScore > 0 && score === maxScore;
+    const slotsLeft = 5 - players.length;
+
+    const emptySlots = Array.from({ length: slotsLeft }, () =>
+      `<div class="player-slot-empty">Empty slot</div>`
+    ).join('');
+
     return `
-      <div class="card">
+      <div class="card draft-card ${isLeader ? 'is-leader' : ''}" style="--i:${cardIdx}">
         <div class="card-header">
-          <h3>${esc(manager.name)}</h3>
-          <span class="text-xs text-muted">${players.length}/5</span>
+          <h3>${esc(manager.name)}<span class="leader-crown">👑</span></h3>
+          <span class="text-xs text-muted">${players.length}/5 picks</span>
         </div>
         <div style="padding: 6px 14px 12px;">
-          ${players.length === 0
-            ? `<div class="empty-state" style="padding:20px 0;"><p>No players yet</p></div>`
-            : players.map(p => playerItemHTML(p, true)).join('')
-          }
+          ${players.map((p, i) => playerItemHTML(p, true, i)).join('')}
+          ${emptySlots}
           ${canAdd ? `
             <button class="btn-add-player" onclick="openAddPlayer('${manager.id}')">
               <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14" style="margin-right:4px"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/></svg>
@@ -158,23 +169,34 @@ function renderDraft() {
   }).join('');
 }
 
-function playerItemHTML(p, showDelete = false) {
+function playerItemHTML(p, showDelete = false, animIndex = -1) {
   const score    = calcPlayerScore(p);
   const isDouble = p.seed >= 9;
   const scoreStr = score !== 0 ? `${score}` : '—';
+  const animStyle = animIndex >= 0
+    ? `style="animation: cardFadeUp 0.25s ease both; animation-delay: ${animIndex * 40}ms"`
+    : '';
   return `
-    <div class="player-item ${p.eliminated ? 'eliminated' : ''}">
-      <span class="seed-badge ${isDouble ? 'double' : ''}" title="${isDouble ? '2× points (seed 9-16)' : `Seed ${p.seed}`}">${p.seed}</span>
+    <div class="player-item ${p.eliminated ? 'eliminated' : ''}"
+         ${animStyle}
+         onmouseenter="showPlayerTooltip(event,'${p.id}')"
+         onmouseleave="hidePlayerTooltip()"
+         ontouchstart="showPlayerTooltip(event,'${p.id}')"
+         ontouchend="hidePlayerTooltip()">
+      <span class="seed-badge ${isDouble ? 'double' : ''}">${p.seed}</span>
+      ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
       <div class="player-info">
         <div class="player-name">${esc(p.name)}</div>
-        <div class="player-meta">${esc(p.position)} · ${esc(p.team)}${isDouble ? ' · <b style="color:var(--crimson)">2×</b>' : ''}${p.eliminated ? ` · <span style="color:var(--gray-400)">Out R${p.eliminatedRound || '?'}</span>` : ''}</div>
+        <div class="player-meta">${esc(p.position)} · ${esc(p.team)}${p.eliminated ? ` · <span style="color:var(--gray-400)">Out R${p.eliminatedRound || '?'}</span>` : ''}</div>
       </div>
-      <div class="player-score">${scoreStr}</div>
-      ${showDelete ? `
-        <button class="btn-ghost-danger" onclick="removePlayer('${p.id}')" title="Remove from draft">
-          <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg>
-        </button>
-      ` : ''}
+      <div class="player-score-wrap">
+        <div class="player-score">${scoreStr}</div>
+        ${showDelete ? `
+          <button class="btn-ghost-danger" onclick="event.stopPropagation();removePlayer('${p.id}')" title="Remove from draft">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg>
+          </button>
+        ` : ''}
+      </div>
     </div>
   `;
 }
@@ -185,28 +207,60 @@ function renderLeaderboard() {
     .map(m => ({ ...m, score: calcManagerScore(m.id), players: appData.players.filter(p => p.managerId === m.id) }))
     .sort((a, b) => b.score - a.score);
 
-  const prizes = { 1: '1st · $200', 2: '2nd · $50' };
+  const maxScore = standings[0]?.score || 0;
+  const medals   = { 1: '🥇', 2: '🥈', 3: '🥉' };
+  const prizes   = { 1: '🏆 1st Place · $200', 2: '2nd Place · $50' };
 
   document.getElementById('leaderboard-content').innerHTML = standings.map((m, i) => {
     const rank      = i + 1;
     const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
+    const rankLabel = medals[rank] || rank;
     const prize     = prizes[rank] || '';
+    const pct       = maxScore > 0 ? Math.round((m.score / maxScore) * 100) : 0;
+
+    const playerRows = m.players.length === 0
+      ? `<div class="empty-state" style="padding:16px 0;"><p>No players drafted</p></div>`
+      : m.players.map(p => {
+          const pScore   = calcPlayerScore(p);
+          const isDouble = p.seed >= 9;
+          const contrib  = m.score > 0 ? Math.round((pScore / m.score) * 100) : 0;
+          const ptsClass = pScore === 0 ? 'zero' : '';
+          return `
+            <div class="lb-player-row"
+                 onmouseenter="showPlayerTooltip(event,'${p.id}')"
+                 onmouseleave="hidePlayerTooltip()"
+                 ontouchstart="showPlayerTooltip(event,'${p.id}')"
+                 ontouchend="hidePlayerTooltip()">
+              <span class="seed-badge ${isDouble ? 'double' : ''}" style="width:24px;height:24px;font-size:0.68rem;">${p.seed}</span>
+              ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
+              <div style="flex:1;min-width:0;">
+                <div class="lb-player-name">${esc(p.name)}</div>
+                <div class="lb-player-sub">${esc(p.position)} · ${esc(p.team)}${p.eliminated ? ` · <span style="color:var(--gray-400)">Out R${p.eliminatedRound||'?'}</span>` : ''}</div>
+              </div>
+              <div class="lb-player-pts ${ptsClass}">
+                ${pScore !== 0 ? pScore : '—'}
+                ${pScore !== 0 && m.score > 0 ? `<span class="pts-contrib">${contrib}%</span>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
     return `
       <div class="card lb-card">
         <div class="lb-card-header" onclick="toggleLbPlayers('lb-players-${m.id}')">
-          <div class="rank-badge ${rankClass}">${rank}</div>
-          <div style="flex:1; min-width:0;">
+          <div class="rank-badge ${rankClass}">${rankLabel}</div>
+          <div class="lb-manager-info">
             <div class="lb-manager-name">${esc(m.name)}</div>
             ${prize ? `<div class="lb-prize-tag">${prize}</div>` : ''}
+            <div class="lb-progress-track">
+              <div class="lb-progress-bar" style="width:${pct}%"></div>
+            </div>
           </div>
           <div class="lb-score">${m.score}<span>pts</span></div>
           <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style="color:var(--gray-400);margin-left:8px;flex-shrink:0;"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
         </div>
-        <div id="lb-players-${m.id}" class="lb-players" style="display:none; padding:4px 14px 8px;">
-          ${m.players.length === 0
-            ? `<div class="empty-state" style="padding:16px 0;"><p>No players drafted</p></div>`
-            : m.players.map(p => playerItemHTML(p, false)).join('')
-          }
+        <div id="lb-players-${m.id}" class="lb-players" style="display:none;">
+          ${playerRows}
         </div>
       </div>
     `;
@@ -238,23 +292,28 @@ function renderStats() {
     return `
       <div class="stats-section-header">${esc(m.name)}</div>
       ${players.map(p => {
-        const stat     = roundData?.stats.find(s => s.playerId === p.id);
-        const hasStats = !!stat;
-        const isDouble = p.seed >= 9;
-        const roundPts = hasStats ? round1(calcRoundScore(stat, isDouble ? 2 : 1)) : null;
+        const stat      = roundData?.stats.find(s => s.playerId === p.id);
+        const hasStats  = !!stat;
+        const isDouble  = p.seed >= 9;
+        const roundPts  = hasStats ? round1(calcRoundScore(stat, isDouble ? 2 : 1)) : null;
+        const totalPts  = calcPlayerScore(p);
         return `
           <div class="stats-player-item" onclick="openStatsModal('${p.id}', ${currentRound})">
             <span class="seed-badge ${isDouble ? 'double' : ''}">${p.seed}</span>
-            <div class="player-info" style="flex:1">
-              <div class="player-name">${esc(p.name)}</div>
-              <div class="player-meta">${esc(p.position)} · ${esc(p.team)}${isDouble ? ' · <b style="color:var(--crimson)">2×</b>' : ''}</div>
+            ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
+            <div class="stats-player-name-wrap">
+              <div class="stats-player-name">${esc(p.name)}</div>
+              <div class="stats-player-sub">${esc(p.position)} · ${esc(p.team)}</div>
             </div>
             ${hasStats
-              ? `<div style="text-align:right;">
-                   <div class="stats-entered-badge">Stats entered</div>
+              ? `<div class="stats-pts-col">
                    <div class="stats-round-pts">${roundPts} pts</div>
+                   <div class="stats-total-pts">${totalPts} total</div>
                  </div>`
-              : `<span class="text-xs text-muted" style="padding-left:4px">+ Enter stats</span>`
+              : `<div class="stats-pts-col">
+                   <span class="text-xs text-muted">+ Enter stats</span>
+                   ${totalPts !== 0 ? `<div class="stats-total-pts">${totalPts} total</div>` : ''}
+                 </div>`
             }
           </div>
         `;
@@ -306,23 +365,29 @@ function renderStatus() {
         return `
           <div style="border-bottom:1px solid var(--gray-100)">
             <div class="stats-section-header">${esc(m.name)}</div>
-            ${players.map(p => `
-              <div class="player-item" style="padding:10px 18px;">
-                <span class="seed-badge ${p.seed >= 9 ? 'double' : ''}">${p.seed}</span>
-                <div class="player-info">
-                  <div class="player-name ${p.eliminated ? 'text-muted' : ''}" style="${p.eliminated ? 'text-decoration:line-through' : ''}">${esc(p.name)}</div>
-                  <div class="player-meta">${esc(p.position)} · ${esc(p.team)}</div>
+            ${players.map(p => {
+              const isDouble = p.seed >= 9;
+              return `
+                <div class="status-player-row ${p.eliminated ? 'is-eliminated' : ''}"
+                     onmouseenter="showPlayerTooltip(event,'${p.id}')"
+                     onmouseleave="hidePlayerTooltip()">
+                  <span class="seed-badge ${isDouble ? 'double' : ''}">${p.seed}</span>
+                  ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
+                  <div class="status-player-info">
+                    <div class="status-player-name ${p.eliminated ? 'crossed' : ''}">${esc(p.name)}</div>
+                    <div class="status-player-meta">${esc(p.position)} · ${esc(p.team)}</div>
+                  </div>
+                  <div class="status-actions">
+                    ${p.eliminated
+                      ? `<span class="out-tag">Out R${p.eliminatedRound || '?'}</span>
+                         <button class="btn-restore" onclick="restorePlayer('${p.id}')">Restore</button>`
+                      : `<span class="text-xs text-green" style="white-space:nowrap"><span class="active-dot"></span>Active</span>
+                         <button class="btn-eliminate" onclick="openEliminateModal('${p.id}')">Eliminate</button>`
+                    }
+                  </div>
                 </div>
-                <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;">
-                  ${p.eliminated
-                    ? `<span class="out-tag">Out R${p.eliminatedRound || '?'}</span>
-                       <button class="btn-restore" onclick="restorePlayer('${p.id}')">Restore</button>`
-                    : `<span class="text-xs text-green"><span class="active-dot"></span>Active</span>
-                       <button class="btn-eliminate" onclick="openEliminateModal('${p.id}')">Eliminate</button>`
-                  }
-                </div>
-              </div>
-            `).join('')}
+              `;
+            }).join('')}
           </div>
         `;
       }).join('')}
@@ -904,6 +969,63 @@ function removePlayer(playerId) {
       showToast(e.message, true);
     }
   });
+}
+
+// ─── PLAYER TOOLTIP ───────────────────────────────────────
+
+let tooltipTimeout;
+const tooltipEl = () => document.getElementById('player-tooltip');
+
+function showPlayerTooltip(e, playerId) {
+  const player = appData.players.find(p => p.id === playerId);
+  if (!player) return;
+
+  const score    = calcPlayerScore(player);
+  const isDouble = player.seed >= 9;
+
+  const roundLines = appData.rounds.map(r => {
+    const stat = r.stats.find(s => s.playerId === playerId);
+    if (!stat) return '';
+    const pts = round1(calcRoundScore(stat, isDouble ? 2 : 1));
+    return `<div class="ptt-round"><span>${ROUND_SHORT[r.round]}</span><span><b>${pts > 0 ? '+' : ''}${pts} pts</b></span></div>`;
+  }).filter(Boolean).join('');
+
+  const tip = tooltipEl();
+  tip.innerHTML = `
+    <div class="ptt-name">${esc(player.name)}</div>
+    <div class="ptt-meta">${esc(player.team)} · Seed ${player.seed} · ${esc(player.position)}</div>
+    ${isDouble ? '<div class="ptt-double">⚡ 2× Seed Multiplier</div>' : ''}
+    <div class="ptt-score">${score !== 0 ? score + ' fantasy pts' : '0 pts so far'}</div>
+    ${roundLines ? `<hr class="ptt-divider"><div class="ptt-rounds">${roundLines}</div>` : ''}
+    ${player.eliminated ? `<div class="ptt-elim">❌ Eliminated Round ${player.eliminatedRound || '?'}</div>` : ''}
+    <div class="ptt-hint">${'ontouchstart' in window ? 'Tap elsewhere to dismiss' : 'Hover for details'}</div>
+  `;
+
+  // Position near cursor / touch
+  const x = e.touches ? e.touches[0].clientX : e.clientX;
+  const y = e.touches ? e.touches[0].clientY : e.clientY;
+
+  tip.style.display = 'block';
+  const tw = tip.offsetWidth;
+  const th = tip.offsetHeight;
+  let left = x + 12;
+  let top  = y + 12;
+  if (left + tw > window.innerWidth  - 10) left = x - tw - 12;
+  if (top  + th > window.innerHeight - 10) top  = y - th - 12;
+  tip.style.left = Math.max(6, left) + 'px';
+  tip.style.top  = Math.max(6, top)  + 'px';
+
+  clearTimeout(tooltipTimeout);
+  tip.classList.add('visible');
+}
+
+function hidePlayerTooltip() {
+  clearTimeout(tooltipTimeout);
+  tooltipTimeout = setTimeout(() => {
+    const tip = tooltipEl();
+    tip.classList.remove('visible');
+    setTimeout(() => { tip.style.display = 'none'; }, 160);
+  }, 80);
 }
 
 // ─── TOAST ────────────────────────────────────────────────
