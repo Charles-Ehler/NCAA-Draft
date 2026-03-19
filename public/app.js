@@ -15,12 +15,12 @@ const ROUND_SHORT = { 1:'R64', 2:'R32', 3:'S16', 4:'E8', 5:'F4', 6:'Champ' };
 
 // Round keywords for ESPN round detection
 const ROUND_KEYWORDS = [
-  { rx: /round of 64|first round|first four/i,               num: 1 },
-  { rx: /round of 32|second round/i,                         num: 2 },
-  { rx: /sweet 16|sweet sixteen|regional semifinal/i,        num: 3 },
-  { rx: /elite 8|elite eight|regional (final|championship)/i,num: 4 },
-  { rx: /final four|national semifinal/i,                    num: 5 },
-  { rx: /national championship|championship game/i,          num: 6 }
+  { rx: /round of 64|first round|1st round|first four/i,               num: 1 },
+  { rx: /round of 32|second round|2nd round/i,                         num: 2 },
+  { rx: /sweet 16|sweet sixteen|regional semifinal/i,                  num: 3 },
+  { rx: /elite 8|elite eight|regional (final|championship)/i,          num: 4 },
+  { rx: /final four|national semifinal/i,                              num: 5 },
+  { rx: /national championship|championship game/i,                    num: 6 }
 ];
 
 // ─── Admin / Password ──────────────────────────────────────
@@ -650,15 +650,29 @@ async function _doSync(silent = false) {
   try {
     if (!silent) showToast('Syncing stats from ESPN…');
 
-    const scoreboard = await fetch('/api/espn/scoreboard').then(r => r.json());
-    if (scoreboard.error) throw new Error(scoreboard.error);
+    // Build list of dates to check: today + last 4 days (captures games that finished yesterday etc.)
+    const dates = [];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      dates.push(d.toISOString().slice(0, 10).replace(/-/g, ''));
+    }
 
-    const events = (scoreboard.events || []).filter(e =>
-      e.status?.type?.completed && isTournamentEvent(e)
-    );
+    const seenIds = new Set();
+    const events  = [];
+    for (const date of dates) {
+      const sb = await fetch(`/api/espn/scoreboard?dates=${date}`).then(r => r.json());
+      if (sb.error) continue;
+      for (const e of sb.events || []) {
+        if (!seenIds.has(e.id) && e.status?.type?.completed && isTournamentEvent(e)) {
+          seenIds.add(e.id);
+          events.push(e);
+        }
+      }
+    }
 
     if (events.length === 0) {
-      if (!silent) showToast('No completed tournament games found today');
+      if (!silent) showToast('No completed tournament games found');
       return;
     }
 
@@ -703,15 +717,15 @@ async function applyGameStats(summary, round) {
 
   for (const teamBox of summary.boxscore?.players || []) {
     for (const statGroup of teamBox.statistics || []) {
-      const keys = statGroup.keys || [];
+      const labels = statGroup.labels || [];
       for (const entry of statGroup.athletes || []) {
         const stats = entry.stats || [];
         const row   = { name: entry.athlete?.displayName || '', parsed: {} };
 
-        // Map stat keys to values
-        keys.forEach((key, i) => {
+        // Map stat labels (PTS, REB, etc.) to values
+        labels.forEach((label, i) => {
           const val = parseFloat(stats[i]);
-          row.parsed[key.toUpperCase()] = isNaN(val) ? 0 : val;
+          row.parsed[label.toUpperCase()] = isNaN(val) ? 0 : val;
         });
 
         boxPlayers.push(row);
