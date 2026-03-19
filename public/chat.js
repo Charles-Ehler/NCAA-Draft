@@ -43,6 +43,7 @@ function toggleChat() {
   } else {
     panel.classList.remove('open');
     panel.setAttribute('aria-hidden', 'true');
+    panel.style.height = '';  // reset iOS viewport override
   }
 }
 
@@ -214,4 +215,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('chat-name-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); setChatName(); }
   });
+
+  // iOS keyboard: shrink chat panel to visible viewport so input stays visible
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const panel = document.getElementById('chat-panel');
+      if (chatOpen) {
+        panel.style.height = window.visualViewport.height + 'px';
+      }
+    });
+  }
 });

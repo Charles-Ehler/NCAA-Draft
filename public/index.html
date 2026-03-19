@@ -17,7 +17,7 @@
     <div class="header-inner">
       <div>
         <div class="header-title">Dig Bicken with the Boys</div>
-        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In &nbsp;<span id="version-badge" style="opacity:0.4;font-size:0.7em;font-weight:400;letter-spacing:0.05em">v3</span></div>
+        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In &nbsp;<span id="version-badge" style="opacity:0.4;font-size:0.7em;font-weight:400;letter-spacing:0.05em">v4</span></div>
       </div>
       <div class="header-badge">Rock Chalk!</div>
     </div>
@@ -271,31 +271,31 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="s-pts">Points</label>
-            <input id="s-pts" type="number" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
+            <input id="s-pts" type="number" inputmode="numeric" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
           </div>
           <div class="form-group">
             <label class="form-label" for="s-reb">Rebounds</label>
-            <input id="s-reb" type="number" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
+            <input id="s-reb" type="number" inputmode="numeric" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="s-ast">Assists</label>
-            <input id="s-ast" type="number" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
+            <input id="s-ast" type="number" inputmode="numeric" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
           </div>
           <div class="form-group">
             <label class="form-label" for="s-blk">Blocks</label>
-            <input id="s-blk" type="number" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
+            <input id="s-blk" type="number" inputmode="numeric" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="s-stl">Steals</label>
-            <input id="s-stl" type="number" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
+            <input id="s-stl" type="number" inputmode="numeric" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
           </div>
           <div class="form-group">
             <label class="form-label" for="s-to">Turnovers</label>
-            <input id="s-to" type="number" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
+            <input id="s-to" type="number" inputmode="numeric" class="form-control" placeholder="0" min="0" step="1" oninput="updateScorePreview()">
           </div>
         </div>
         <div id="score-preview" class="score-preview">
@@ -304,7 +304,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button id="clear-stats-btn" class="btn btn-outline" style="margin-right:auto;display:none" onclick="clearStats()">Clear Stats</button>
+        <button id="clear-stats-btn" class="clear-stats-link" style="display:none" onclick="clearStats()">Clear Stats</button>
         <button class="btn btn-outline" onclick="closeStatsModal()">Cancel</button>
         <button class="btn btn-primary" onclick="submitStats()">Save Stats</button>
       </div>
