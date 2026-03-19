@@ -16,7 +16,15 @@
     <div class="header-inner">
       <div>
         <div class="header-title">Dig Bicken with the Boys</div>
-        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In</div>
+        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In &nbsp;<span id="version-badge" style="opacity:0.4;font-size:0.7em;font-weight:400;letter-spacing:0.05em"></span></div>
+        <script>
+          (function() {
+            var ts = new Date('BUILD_TIMESTAMP');
+            document.getElementById('version-badge').textContent = 'Built ' +
+              ts.toLocaleDateString('en-US', {month:'2-digit', day:'2-digit'}) + ' ' +
+              ts.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+          })();
+        </script>
       </div>
       <div class="header-badge">Rock Chalk!</div>
     </div>
