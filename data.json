@@ -7,8 +7,8 @@
     { "id": "andy",    "name": "Andy" }
   ],
   "players": [
-    { "id": "charlie1", "name": "Alex Condon",        "team": "Florida",    "seed": 2, "position": "F",  "managerId": "charlie", "eliminated": false, "eliminatedRound": null },
-    { "id": "charlie2", "name": "Rueben Chinyelu",    "team": "Florida",    "seed": 2, "position": "C",  "managerId": "charlie", "eliminated": false, "eliminatedRound": null },
+    { "id": "charlie1", "name": "Alex Condon",        "team": "Florida",    "seed": 1, "position": "F",  "managerId": "charlie", "eliminated": false, "eliminatedRound": null },
+    { "id": "charlie2", "name": "Rueben Chinyelu",    "team": "Florida",    "seed": 1, "position": "C",  "managerId": "charlie", "eliminated": false, "eliminatedRound": null },
     { "id": "charlie3", "name": "Bennett Stirtz",     "team": "Iowa",       "seed": 9, "position": "G",  "managerId": "charlie", "eliminated": false, "eliminatedRound": null },
     { "id": "charlie4", "name": "Kingston Flemings",  "team": "Houston",    "seed": 2, "position": "G",  "managerId": "charlie", "eliminated": false, "eliminatedRound": null },
     { "id": "charlie5", "name": "Mason Falsley",      "team": "Utah State", "seed": 9, "position": "G",  "managerId": "charlie", "eliminated": false, "eliminatedRound": null },
@@ -21,9 +21,9 @@
 
     { "id": "matt1", "name": "Tristen Newton",  "team": "UConn",     "seed": 1, "position": "G", "managerId": "matt", "eliminated": false, "eliminatedRound": null },
     { "id": "matt2", "name": "Darryn Peterson", "team": "Kansas",    "seed": 4, "position": "G", "managerId": "matt", "eliminated": false, "eliminatedRound": null },
-    { "id": "matt3", "name": "TBD",             "team": "TBD",       "seed": 1, "position": "G", "managerId": "matt", "eliminated": false, "eliminatedRound": null },
-    { "id": "matt4", "name": "Nick Boyd",       "team": "Wisconsin", "seed": 3, "position": "G", "managerId": "matt", "eliminated": false, "eliminatedRound": null },
-    { "id": "matt5", "name": "TBD",             "team": "TBD",       "seed": 1, "position": "G", "managerId": "matt", "eliminated": false, "eliminatedRound": null },
+    { "id": "matt3", "name": "Zuby Ejiofor",      "team": "St. John's",    "seed": 2, "position": "PF", "managerId": "matt", "eliminated": false, "eliminatedRound": null },
+    { "id": "matt4", "name": "Nick Boyd",         "team": "Wisconsin",     "seed": 3, "position": "G",  "managerId": "matt", "eliminated": false, "eliminatedRound": null },
+    { "id": "matt5", "name": "Jeremy Fears Jr.",  "team": "Michigan State","seed": 3, "position": "PG", "managerId": "matt", "eliminated": false, "eliminatedRound": null },
 
     { "id": "brian1", "name": "Braden Smith",     "team": "Purdue",     "seed": 2, "position": "PG", "managerId": "brian", "eliminated": false, "eliminatedRound": null },
     { "id": "brian2", "name": "Tamin Lipsey",     "team": "Iowa State", "seed": 2, "position": "G",  "managerId": "brian", "eliminated": false, "eliminatedRound": null },

@@ -4,7 +4,12 @@
       "Bash(npm install:*)",
       "Bash(npm start:*)",
       "Bash(sleep 1 && curl -s http://localhost:3000/api/data > /dev/null && echo \"OK\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(curl -s \"https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?limit=200&groups=100\")",
+      "Bash(python3 -c \":*)",
+      "Bash(curl -s -X PUT \"https://api.jsonbin.io/v3/b/69bb5f21aa77b81da9f9bc3d\" -H \"X-Master-Key: $2a$10$Qjr41H9zdqcfVa2gj3iPWu/5.U4lhj7v6nqdIJXZC4/mZfBHIRkUW\" -H \"Content-Type: application/json\" -d @/Users/cehler/ncaa-draft/data.json)"
     ]
   }
 }
