@@ -1,29 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
 :root {
   --crimson:      #E8000D;
   --crimson-dark: #B5000A;
   --blue:         #0051A5;
   --blue-dark:    #003D7A;
   --blue-light:   rgba(0, 81, 165, 0.08);
+  --dark:         #0a1628;
   --white:        #FFFFFF;
   --gray-50:      #F8F9FA;
   --gray-100:     #F0F1F3;
   --gray-200:     #E2E4E8;
   --gray-400:     #9EA3AD;
+  --gray-500:     #6B7280;
   --gray-600:     #6B7280;
   --gray-800:     #1F2937;
-  --gold:         #FFB81C;
+  --gray-900:     #111827;
+  --gold:         #F5C518;
   --green:        #16A34A;
-  --shadow-sm:    0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-sm:    0 1px 3px rgba(0,0,0,0.08);
   --shadow-md:    0 4px 8px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08);
   --shadow-lg:    0 12px 24px rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.08);
   --radius:       10px;
   --radius-lg:    16px;
+  --card-border:  1px solid #e8edf2;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--gray-50);
   color: var(--gray-800);
   min-height: 100vh;
@@ -33,30 +39,39 @@ body {
 /* ──────────────── HEADER ──────────────── */
 
 .app-header {
-  position: relative;
-  background: linear-gradient(135deg, var(--crimson) 0%, #C8000B 60%, #A50009 100%);
-  color: white;
-  padding: 14px 20px 12px;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: var(--shadow-md);
+  background: var(--crimson);
+  color: white;
+  padding: 12px 16px 0;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
-/* KU diagonal texture */
+/* Jersey diagonal stripe texture */
 .app-header::before {
   content: '';
   position: absolute;
   inset: 0;
   background-image:
     repeating-linear-gradient(
-      -45deg,
-      rgba(255,255,255,0.05) 0px,
-      rgba(255,255,255,0.05) 1px,
+      45deg,
+      rgba(255,255,255,0.04) 0px,
+      rgba(255,255,255,0.04) 1px,
       transparent 1px,
-      transparent 9px
+      transparent 8px
     );
   pointer-events: none;
+}
+/* Gold bottom separator line */
+.app-header::after {
+  content: '';
+  display: block;
+  height: 2px;
+  background: var(--gold);
+  margin-top: 10px;
+  position: relative;
+  z-index: 2;
 }
 .header-inner {
   position: relative;
@@ -67,18 +82,33 @@ body {
   max-width: 1200px;
   margin: 0 auto;
 }
-.header-title { font-size: 1.35rem; font-weight: 900; letter-spacing: -0.5px; }
-.header-sub   { font-size: 0.72rem; opacity: 0.75; margin-top: 3px; letter-spacing: 0.05px; font-weight: 400; }
+.header-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  line-height: 1;
+  color: white;
+}
+.header-sub {
+  font-size: 11px;
+  font-variant: small-caps;
+  opacity: 0.8;
+  margin-top: 4px;
+  letter-spacing: 0.3px;
+  font-weight: 600;
+}
 .header-badge {
-  background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.28);
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 0.75rem;
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.5);
+  border-radius: 20px;
+  padding: 5px 13px;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
-  backdrop-filter: blur(4px);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* ──────────────── NAVIGATION ──────────────── */
@@ -125,21 +155,22 @@ body {
   flex: 1;
   background: none;
   border: none;
+  border-top: 2px solid transparent;
   padding: 8px 2px 6px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  color: var(--gray-400);
+  color: #999;
   font-size: 0.58rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
-  transition: color 0.15s;
+  letter-spacing: 0.5px;
+  transition: color 0.15s, border-top-color 0.15s;
   min-height: 52px;
 }
-.mobile-nav button.active { color: var(--crimson); }
+.mobile-nav button.active { color: var(--crimson); border-top-color: var(--crimson); }
 .mobile-nav button svg { width: 20px; height: 20px; }
 
 /* ──────────────── MAIN / TABS ──────────────── */
@@ -152,11 +183,11 @@ main {
 .tab-panel { display: none; }
 .tab-panel.active {
   display: block;
-  animation: fadeUp 0.22s ease both;
+  animation: tabFade 0.2s ease both;
 }
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes tabFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ──────────────── CARDS ──────────────── */
@@ -164,7 +195,8 @@ main {
 .card {
   background: white;
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  border: var(--card-border);
+  box-shadow: none;
   overflow: hidden;
 }
 .card-header {
@@ -199,20 +231,21 @@ main {
 /* ──────────────── PRIZE BANNER ──────────────── */
 
 .prize-banner {
-  background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+  background: var(--dark);
   color: white;
   border-radius: var(--radius);
-  padding: 14px 20px;
+  padding: 12px 16px;
   margin-bottom: 16px;
   display: flex;
   justify-content: space-around;
   align-items: center;
+  border: var(--card-border);
 }
-.prize-divider { width: 1px; background: rgba(255,255,255,0.2); height: 38px; }
+.prize-divider { width: 1px; background: rgba(255,255,255,0.12); height: 34px; }
 .prize-item    { text-align: center; }
-.prize-label   { font-size: 0.68rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.6px; }
-.prize-amount  { font-size: 1.35rem; font-weight: 800; margin: 2px 0; }
-.prize-place   { font-size: 0.72rem; opacity: 0.8; }
+.prize-label   { font-size: 0.62rem; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 600; }
+.prize-amount  { font-family: 'Bebas Neue', cursive; font-size: 1.6rem; font-weight: 400; color: var(--gold); margin: 1px 0; line-height: 1; }
+.prize-place   { font-size: 0.65rem; opacity: 0.65; }
 
 /* ──────────────── SCORING INFO ──────────────── */
 
@@ -291,13 +324,13 @@ main {
   box-shadow: 0 0 0 2px rgba(232,0,13,0.25);
 }
 
-/* 2× multiplier badge */
+/* 2× multiplier badge — gold */
 .badge-2x {
   font-size: 0.6rem;
   font-weight: 800;
-  color: var(--crimson);
-  background: rgba(232,0,13,0.10);
-  border: 1px solid rgba(232,0,13,0.2);
+  color: #7a5c00;
+  background: rgba(245,197,24,0.25);
+  border: 1px solid rgba(245,197,24,0.45);
   border-radius: 4px;
   padding: 1px 4px;
   flex-shrink: 0;
@@ -319,15 +352,17 @@ main {
 .player-info  { flex: 1; min-width: 0; }
 /* Names always wrap — never truncate */
 .player-name  {
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
   line-height: 1.3;
   word-wrap: break-word;
   overflow-wrap: break-word;
   white-space: normal;
-  color: var(--gray-800);
+  color: var(--gray-900);
 }
 .player-meta  { font-size: 0.72rem; color: var(--gray-400); margin-top: 2px; line-height: 1.4; }
+.player-stat-pills { font-size: 11px; color: var(--gray-400); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .player-score-wrap {
   display: flex;
   align-items: center;
@@ -335,7 +370,16 @@ main {
   flex-shrink: 0;
   align-self: center;
 }
-.player-score { font-weight: 800; font-size: 0.95rem; color: var(--blue); min-width: 40px; text-align: right; }
+.player-score {
+  font-family: 'Bebas Neue', cursive;
+  font-weight: 400;
+  font-size: 20px;
+  color: var(--crimson);
+  min-width: 40px;
+  text-align: right;
+  line-height: 1;
+}
+.player-score.zero { color: var(--gray-400); }
 .player-item.eliminated .player-name {
   text-decoration: line-through;
   color: var(--gray-400);
@@ -373,6 +417,18 @@ main {
   transition: all 0.15s;
   white-space: nowrap;
   min-height: 36px;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn:active,
+.btn-eliminate:active,
+.btn-restore:active,
+.btn-add-player:active,
+.btn-ghost-danger:active,
+.chat-send-btn:active,
+.chat-name-btn:active,
+.round-tab:active {
+  transform: scale(0.97);
+  transition-duration: 100ms;
 }
 .btn-primary   { background: var(--crimson); color: white; }
 .btn-primary:hover { background: var(--crimson-dark); }
@@ -451,7 +507,9 @@ main {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: none;
   align-items: center;
   justify-content: center;
@@ -467,20 +525,28 @@ main {
   box-shadow: var(--shadow-lg);
   max-height: 92vh;
   overflow-y: auto;
-  animation: slideUp 0.2s ease;
+  animation: modalIn 0.18s ease-out both;
+  overflow: hidden; /* clip the crimson top line */
 }
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+.modal::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: var(--crimson);
+  flex-shrink: 0;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
 }
 .modal-header {
-  padding: 18px 22px 14px;
+  padding: 16px 22px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--gray-100);
 }
-.modal-header h3 { font-size: 1.05rem; font-weight: 700; }
+.modal-header h3 { font-size: 1.05rem; font-weight: 700; color: var(--blue); }
 .modal-body   { padding: 18px 22px; }
 .modal-footer {
   padding: 14px 22px 18px;
@@ -542,70 +608,81 @@ main {
   margin-top: 6px;
 }
 .score-preview-label { font-size: 0.75rem; color: var(--gray-400); margin-bottom: 4px; }
-.score-preview-total { font-size: 1.3rem; font-weight: 800; color: var(--crimson); }
+.score-preview-total { font-family: 'Bebas Neue', cursive; font-size: 1.8rem; font-weight: 400; color: var(--crimson); line-height: 1; }
 .score-preview-breakdown { font-size: 0.75rem; color: var(--gray-600); margin-top: 4px; line-height: 1.6; }
 
 /* ──────────────── LEADERBOARD ──────────────── */
 
-.lb-card { margin-bottom: 12px; }
+.lb-card { margin-bottom: 12px; border: var(--card-border); border-radius: var(--radius); background: white; overflow: hidden; }
 .lb-card-header {
-  padding: 14px 18px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   cursor: pointer;
   transition: background 0.1s;
-  min-height: 64px;
+  min-height: 72px;
 }
 .lb-card-header:hover { background: var(--gray-50); }
 .rank-badge {
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 1rem;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 48px;
+  font-weight: 400;
+  line-height: 1;
+  width: 44px;
+  text-align: center;
   flex-shrink: 0;
 }
-.rank-1     { background: rgba(255,215,0,0.15); }
-.rank-2     { background: rgba(192,192,192,0.2); }
-.rank-3     { background: rgba(205,127,50,0.15); }
-.rank-other { background: var(--gray-100); color: var(--gray-600); font-size: 0.85rem; }
+.rank-1     { color: var(--gold); }
+.rank-2     { color: #aaa; }
+.rank-3     { color: #cd7f32; }
+.rank-other { color: #ccc; font-size: 36px; }
 
 .lb-manager-info { flex: 1; min-width: 0; }
-.lb-manager-name { font-size: 1.05rem; font-weight: 700; }
+.lb-manager-name { font-size: 18px; font-weight: 700; color: var(--gray-900); display: flex; align-items: center; gap: 6px; }
+.lb-trend { font-size: 13px; font-weight: 700; }
+.lb-trend.up   { color: var(--green); }
+.lb-trend.down { color: var(--crimson); }
+.lb-trend.same { color: var(--gray-400); }
 .lb-prize-tag {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--gold);
-  background: rgba(255,184,28,0.1);
-  border: 1px solid rgba(255,184,28,0.25);
-  border-radius: 4px;
-  padding: 1px 6px;
-  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #7a5c00;
+  background: rgba(245,197,24,0.22);
+  border: 1px solid rgba(245,197,24,0.4);
+  border-radius: 10px;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
   margin-top: 3px;
 }
 
 /* Progress bar */
 .lb-progress-track {
-  height: 3px;
+  height: 4px;
   background: var(--gray-100);
-  border-radius: 2px;
-  margin-top: 6px;
+  border-radius: 8px;
+  margin-top: 8px;
   overflow: hidden;
 }
 .lb-progress-bar {
-  height: 3px;
+  height: 4px;
   background: var(--crimson);
-  border-radius: 2px;
-  transition: width 0.5s ease;
+  border-radius: 8px;
+  transition: width 0.6s ease;
   min-width: 2px;
 }
-.rank-1 ~ .lb-manager-info .lb-progress-bar { background: var(--crimson); }
 
-.lb-score { font-size: 1.5rem; font-weight: 800; color: var(--crimson); flex-shrink: 0; line-height: 1; }
-.lb-score span { font-size: 0.7rem; color: var(--gray-400); font-weight: 400; margin-left: 2px; display: block; text-align: right; }
+.lb-score {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--crimson);
+  flex-shrink: 0;
+  line-height: 1;
+  text-align: right;
+}
+.lb-score span { font-size: 0.65rem; color: var(--gray-400); font-weight: 400; display: block; text-align: right; font-family: 'DM Sans', sans-serif; }
 .lb-players { border-top: 1px solid var(--gray-100); }
 
 /* Contribution label in LB expanded view */
@@ -672,10 +749,10 @@ main {
 }
 .round-tab:hover { border-color: var(--blue); color: var(--blue); }
 .round-tab.active {
-  background: var(--blue);
-  border-color: var(--blue);
+  background: var(--crimson);
+  border-color: var(--crimson);
   color: white;
-  box-shadow: 0 2px 6px rgba(0,81,165,0.3);
+  box-shadow: 0 2px 6px rgba(232,0,13,0.25);
 }
 
 /* ──────────────── STATS LIST ──────────────── */
@@ -697,12 +774,14 @@ main {
   align-items: center;
   padding: 13px 16px;
   border-bottom: 1px solid var(--gray-100);
+  border-left: 3px solid transparent;
   gap: 10px;
   cursor: pointer;
   transition: background 0.1s;
   min-height: 56px;
 }
 .stats-player-item:hover { background: var(--gray-50); }
+.stats-player-item.has-stats { border-left-color: var(--green); }
 .stats-player-item:last-of-type { border-bottom: none; }
 .stats-player-name-wrap { flex: 1; min-width: 0; }
 .stats-player-name {
@@ -724,11 +803,13 @@ main {
   white-space: nowrap;
 }
 .stats-round-pts {
-  font-size: 0.9rem;
-  font-weight: 800;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.2rem;
+  font-weight: 400;
   color: var(--crimson);
   min-width: 52px;
   text-align: right;
+  line-height: 1;
 }
 .stats-total-pts {
   font-size: 0.68rem;
@@ -760,7 +841,7 @@ main {
   padding: 12px 8px;
   text-align: center;
 }
-.active-count-num  { font-size: 1.8rem; font-weight: 800; }
+.active-count-num  { font-family: 'Bebas Neue', cursive; font-size: 2rem; font-weight: 400; line-height: 1; }
 .active-count-num.active { color: var(--blue); }
 .active-count-num.zero   { color: var(--gray-400); }
 .active-count-name { font-size: 0.78rem; font-weight: 700; margin-top: 3px; }
@@ -1222,12 +1303,14 @@ main {
 }
 
 .pl-rank {
-  font-size: 1.4rem;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2rem;
+  font-weight: 400;
   min-width: 36px;
   text-align: center;
-  font-weight: 700;
   color: var(--gray-400);
   flex-shrink: 0;
+  line-height: 1;
 }
 
 .pl-info { flex: 1; min-width: 0; }
@@ -1257,8 +1340,9 @@ main {
 .pl-mgr { color: var(--blue); font-weight: 600; }
 
 .pl-pts {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.6rem;
+  font-weight: 400;
   color: var(--crimson);
   flex-shrink: 0;
   text-align: right;
@@ -1326,4 +1410,137 @@ main {
   border-radius: 3px;
   padding: 1px 3px;
   font-weight: 800;
+}
+
+/* ── LOADING BAR ──────────────────────────────────────────── */
+#loading-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: var(--crimson);
+  z-index: 9999;
+  transition: width 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+#loading-bar.active { opacity: 1; }
+
+/* ── ADMIN MODAL (password) — dark ────────────────────────── */
+#password-modal .modal {
+  background: #1a1a2e;
+  color: white;
+}
+#password-modal .modal::before { background: var(--crimson); }
+#password-modal .modal-header { border-bottom-color: rgba(255,255,255,0.1); }
+#password-modal .modal-header h3 { color: white; }
+#password-modal .modal-body p { color: rgba(255,255,255,0.6); }
+#password-modal .form-control {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+  color: white;
+}
+#password-modal .form-control::placeholder { color: rgba(255,255,255,0.35); }
+#password-modal .form-control:focus { border-color: var(--crimson); box-shadow: 0 0 0 3px rgba(232,0,13,0.2); }
+#password-modal .modal-footer { border-top-color: rgba(255,255,255,0.08); }
+#password-modal .btn-outline { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); }
+#password-modal .lock-icon { font-size: 2rem; text-align: center; display: block; margin-bottom: 12px; }
+
+/* ── PLAYERS TAB — top medal borders ─────────────────────── */
+.pl-card.pl-rank-1 { border-top: 2px solid var(--gold); }
+.pl-card.pl-rank-2 { border-top: 2px solid #aaa; }
+.pl-card.pl-rank-3 { border-top: 2px solid #cd7f32; }
+
+/* ── DRAFT CARD — clean border, no shadow ─────────────────── */
+.draft-card {
+  border: var(--card-border);
+  box-shadow: none;
+  animation: cardFadeUp 0.3s ease both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+.draft-card.is-leader {
+  border-color: rgba(232,0,13,0.3);
+}
+
+/* ── CHAT BUBBLE — white border ──────────────────────────── */
+.chat-bubble { border: 2px solid white; }
+
+/* ── STATUS TAB — two sections ───────────────────────────── */
+.status-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 16px 0 8px;
+}
+.status-section-header:first-child { margin-top: 0; }
+.status-summary {
+  font-size: 0.82rem;
+  color: var(--gray-600);
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+
+/* Eliminated state — gray card */
+.status-player-row.is-eliminated {
+  background: #f5f5f5;
+  border-left: none;
+  padding-left: 18px;
+}
+.status-player-row.is-eliminated .status-player-name { color: #999; }
+.status-player-row.is-eliminated .status-player-meta { color: #bbb; }
+
+/* ── SCORING KEY — horizontal tag pills ──────────────────── */
+.scoring-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: 0;
+  margin-bottom: 14px;
+}
+.scoring-info strong { display: none; }
+.scoring-pill {
+  display: inline-block;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  white-space: nowrap;
+}
+.scoring-pill.double { background: rgba(245,197,24,0.15); border-color: rgba(245,197,24,0.4); color: #7a5c00; }
+
+/* ── DRAFT MANAGER CARD HEADER ───────────────────────────── */
+.draft-card .card-header {
+  padding: 12px 14px 10px;
+}
+.draft-card .card-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--blue);
+}
+.draft-mgr-score {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1rem;
+  color: var(--crimson);
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* ── SECTION TITLE ───────────────────────────────────────── */
+.section-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--blue);
 }

@@ -100,13 +100,16 @@ async function api(method, path, body) {
 }
 
 async function loadData(silent = false) {
+  const bar = document.getElementById('loading-bar');
+  if (bar) { bar.style.width = '40%'; bar.classList.add('active'); }
   try {
     appData = await api('GET', '/data');
-    // Merge roster cache with any tournamentTeams stored server-side
     renderAll();
     updateLastSyncDisplay();
     updateTeamsStatus();
+    if (bar) { bar.style.width = '100%'; setTimeout(() => { bar.style.width = '0%'; bar.classList.remove('active'); }, 300); }
   } catch (e) {
+    if (bar) { bar.style.width = '0%'; bar.classList.remove('active'); }
     if (!silent) showToast('Could not load data', true);
   }
 }
@@ -154,7 +157,7 @@ function renderDraft() {
       <div class="card draft-card ${isLeader ? 'is-leader' : ''}" style="--i:${cardIdx}">
         <div class="card-header">
           <h3>${esc(manager.name)}<span class="leader-crown">👑</span></h3>
-          <span class="text-xs text-muted">${players.length}/5 picks</span>
+          <span class="draft-mgr-score">${players.length}/5 · ${score > 0 ? score + 'pts' : '0pts'}</span>
         </div>
         <div style="padding: 6px 14px 12px;">
           ${players.map((p, i) => playerItemHTML(p, true, i)).join('')}
@@ -175,6 +178,19 @@ function playerItemHTML(p, showDelete = false, animIndex = -1) {
   const score    = calcPlayerScore(p);
   const isDouble = p.seed >= 9;
   const scoreStr = score !== 0 ? `${score}` : '—';
+
+  // Build stat pills from all rounds
+  const statParts = [];
+  for (const r of appData.rounds) {
+    const s = r.stats.find(st => st.playerId === p.id);
+    if (!s) continue;
+    if (s.points)    statParts.push(`${s.points}pts`);
+    if (s.rebounds)  statParts.push(`${s.rebounds}reb`);
+    if (s.assists)   statParts.push(`${s.assists}ast`);
+    if (s.blocks)    statParts.push(`${s.blocks}blk`);
+    if (s.steals)    statParts.push(`${s.steals}stl`);
+  }
+  const pillLine = statParts.length ? `<div class="player-stat-pills">${statParts.join(' · ')}</div>` : '';
   const animStyle = animIndex >= 0
     ? `style="animation: cardFadeUp 0.25s ease both; animation-delay: ${animIndex * 40}ms"`
     : '';
@@ -190,6 +206,7 @@ function playerItemHTML(p, showDelete = false, animIndex = -1) {
       <div class="player-info">
         <div class="player-name">${esc(p.name)}</div>
         <div class="player-meta">${esc(p.position)} · ${esc(p.team)}${p.eliminated ? ` · <span style="color:var(--gray-400)">Out R${p.eliminatedRound || '?'}</span>` : ''}</div>
+        ${pillLine}
       </div>
       <div class="player-score-wrap">
         <div class="player-score">${scoreStr}</div>
@@ -209,16 +226,25 @@ function renderLeaderboard() {
     .map(m => ({ ...m, score: calcManagerScore(m.id), players: appData.players.filter(p => p.managerId === m.id) }))
     .sort((a, b) => b.score - a.score);
 
+  // Trend arrows: compare current rank to stored previous rank
+  const prevKey = 'lb_prev_ranks';
+  let prevRanks = {};
+  try { prevRanks = JSON.parse(sessionStorage.getItem(prevKey) || '{}'); } catch {}
+  const curRanks = {};
+  standings.forEach((m, i) => { curRanks[m.id] = i + 1; });
+  // Store current for next comparison (with slight delay so arrows are meaningful across refreshes)
+  setTimeout(() => { try { sessionStorage.setItem(prevKey, JSON.stringify(curRanks)); } catch {} }, 3000);
+
   const maxScore = standings[0]?.score || 0;
-  const medals   = { 1: '🥇', 2: '🥈', 3: '🥉' };
-  const prizes   = { 1: '🏆 1st Place · $200', 2: '2nd Place · $50' };
+  const prizes   = { 1: '🥇 $200', 2: '🥈 $50' };
 
   document.getElementById('leaderboard-content').innerHTML = standings.map((m, i) => {
     const rank      = i + 1;
     const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
-    const rankLabel = medals[rank] || rank;
     const prize     = prizes[rank] || '';
     const pct       = maxScore > 0 ? Math.round((m.score / maxScore) * 100) : 0;
+    const prev      = prevRanks[m.id];
+    const trendArrow = prev == null ? '' : prev > rank ? '<span class="lb-trend up">↑</span>' : prev < rank ? '<span class="lb-trend down">↓</span>' : '<span class="lb-trend same">—</span>';
 
     const playerRows = m.players.length === 0
       ? `<div class="empty-state" style="padding:16px 0;"><p>No players drafted</p></div>`
@@ -250,9 +276,9 @@ function renderLeaderboard() {
     return `
       <div class="card lb-card">
         <div class="lb-card-header" onclick="toggleLbPlayers('lb-players-${m.id}')">
-          <div class="rank-badge ${rankClass}">${rankLabel}</div>
+          <div class="rank-badge ${rankClass}">${rank}</div>
           <div class="lb-manager-info">
-            <div class="lb-manager-name">${esc(m.name)}</div>
+            <div class="lb-manager-name">${esc(m.name)}${trendArrow}</div>
             ${prize ? `<div class="lb-prize-tag">${prize}</div>` : ''}
             <div class="lb-progress-track">
               <div class="lb-progress-bar" style="width:${pct}%"></div>
@@ -300,7 +326,7 @@ function renderStats() {
         const roundPts  = hasStats ? round1(calcRoundScore(stat, isDouble ? 2 : 1)) : null;
         const totalPts  = calcPlayerScore(p);
         return `
-          <div class="stats-player-item" onclick="openStatsModal('${p.id}', ${currentRound})">
+          <div class="stats-player-item ${hasStats ? 'has-stats' : ''}" onclick="openStatsModal('${p.id}', ${currentRound})">
             <span class="seed-badge ${isDouble ? 'double' : ''}">${p.seed}</span>
             ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
             <div class="stats-player-name-wrap">
@@ -459,7 +485,7 @@ function renderPlayers() {
     }).join('');
 
     return `
-      <div class="pl-card ${p.eliminated ? 'pl-eliminated' : ''}" onclick="togglePlayerCard(this)">
+      <div class="pl-card ${p.eliminated ? 'pl-eliminated' : ''} ${rank <= 3 ? 'pl-rank-' + rank : ''}" onclick="togglePlayerCard(this)">
         <div class="pl-card-main">
           <div class="pl-rank">${rankMedal || rankLabel}</div>
           <div class="pl-info">
