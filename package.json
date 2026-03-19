@@ -4,7 +4,7 @@
   "description": "NCAA Tournament Fantasy Draft — KU Edition",
   "main": "server.js",
   "scripts": {
-    "prestart": "node -e \"const fs=require('fs');let h=fs.readFileSync('public/index.html','utf8');h=h.replace(/BUILD_TIMESTAMP/g,new Date().toISOString());fs.writeFileSync('public/index.html',h);\"",
+    "prestart": "node -e \"const fs=require('fs'),now=new Date(),f=(now.getMonth()+1).toString().padStart(2,'0')+'/'+(now.getDate()).toString().padStart(2,'0')+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/Chicago'});let h=fs.readFileSync('public/index.html','utf8');h=h.replace(/BUILD_TIMESTAMP/g,f);fs.writeFileSync('public/index.html',h);\"",
     "start": "node server.js"
   },
   "dependencies": {

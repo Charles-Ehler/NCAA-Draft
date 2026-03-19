@@ -16,15 +16,7 @@
     <div class="header-inner">
       <div>
         <div class="header-title">Dig Bicken with the Boys</div>
-        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In &nbsp;<span id="version-badge" style="opacity:0.4;font-size:0.7em;font-weight:400;letter-spacing:0.05em"></span></div>
-        <script>
-          (function() {
-            var ts = new Date('BUILD_TIMESTAMP');
-            document.getElementById('version-badge').textContent = 'Built ' +
-              ts.toLocaleDateString('en-US', {month:'2-digit', day:'2-digit'}) + ' ' +
-              ts.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
-          })();
-        </script>
+        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In &nbsp;<span style="opacity:0.4;font-size:0.7em;font-weight:400;letter-spacing:0.05em">Built BUILD_TIMESTAMP</span></div>
       </div>
       <div class="header-badge">Rock Chalk!</div>
     </div>
@@ -36,6 +28,7 @@
       <button data-tab="draft"       class="active" onclick="switchTab('draft')">Draft Board</button>
       <button data-tab="leaderboard"            onclick="switchTab('leaderboard')">Leaderboard</button>
       <button data-tab="stats"                  onclick="switchTab('stats')">Enter Stats</button>
+      <button data-tab="players"                onclick="switchTab('players')">Players</button>
       <button data-tab="status"                 onclick="switchTab('status')">Player Status</button>
     </div>
   </nav>
@@ -117,6 +110,15 @@
       <div id="stats-player-list"></div>
     </div>
 
+    <!-- ═══ PLAYERS TAB ═══ -->
+    <div id="tab-players" class="tab-panel">
+      <div class="section-header mb-12">
+        <span class="section-title">Player Rankings</span>
+        <span class="section-sub">Tap a card to expand</span>
+      </div>
+      <div id="players-content"></div>
+    </div>
+
     <!-- ═══ STATUS TAB ═══ -->
     <div id="tab-status" class="tab-panel">
       <div class="section-header mb-16">
@@ -148,6 +150,12 @@
         <line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>
       </svg>
       Stats
+    </button>
+    <button data-tab="players" onclick="switchTab('players')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+      Players
     </button>
     <button data-tab="status" onclick="switchTab('status')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

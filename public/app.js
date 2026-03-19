@@ -118,13 +118,15 @@ function switchTab(tab) {
   document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
-  if (tab === 'stats') renderStats();
+  if (tab === 'stats')   renderStats();
+  if (tab === 'players') renderPlayers();
 }
 
 // ─── Render All ───────────────────────────────────────────
 function renderAll() {
   renderDraft();
   renderLeaderboard();
+  renderPlayers();
   renderStats();
   renderStatus();
 }
@@ -397,6 +399,93 @@ function renderStatus() {
   container.innerHTML = countCards + playerList;
 }
 
+// ─── PLAYERS TAB ──────────────────────────────────────────
+function renderPlayers() {
+  const container = document.getElementById('players-content');
+  if (!container) return;
+
+  if (appData.players.length === 0) {
+    container.innerHTML = `<div class="empty-state"><p>No players drafted yet.</p></div>`;
+    return;
+  }
+
+  // Score every player
+  const scored = appData.players.map(p => {
+    const multiplier = p.seed >= 9 ? 2 : 1;
+    const rounds = appData.rounds.map(r => {
+      const stat = r.stats.find(s => s.playerId === p.id);
+      if (!stat) return null;
+      const base  = round1(calcRoundScore(stat, 1));
+      const total = round1(calcRoundScore(stat, multiplier));
+      return { round: r.round, name: r.name, stat, base, total };
+    }).filter(Boolean);
+    const totalPts = round1(rounds.reduce((s, r) => s + r.total, 0));
+    const mgr = appData.managers.find(m => m.id === p.managerId);
+    return { ...p, multiplier, rounds, totalPts, mgrName: mgr?.name || '?' };
+  });
+
+  // Sort: active first by pts desc, then eliminated by pts desc
+  scored.sort((a, b) => {
+    if (a.eliminated !== b.eliminated) return a.eliminated ? 1 : -1;
+    return b.totalPts - a.totalPts;
+  });
+
+  const ROUND_FULL_MAP = { 1:'Round of 64',2:'Round of 32',3:'Sweet 16',4:'Elite 8',5:'Final Four',6:'Championship' };
+
+  const cards = scored.map((p, idx) => {
+    const rank       = idx + 1;
+    const isDouble   = p.multiplier === 2;
+    const rankLabel  = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
+    const rankMedal  = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+
+    const roundRows = p.rounds.map(r => {
+      const s = r.stat;
+      const statLine = [
+        s.points    ? `${s.points} pts`                         : '',
+        s.rebounds  ? `${s.rebounds} reb`                       : '',
+        s.assists   ? `${s.assists} ast`                        : '',
+        s.blocks    ? `${s.blocks} blk`                         : '',
+        s.steals    ? `${s.steals} stl`                         : '',
+        s.turnovers ? `${s.turnovers} to`                       : ''
+      ].filter(Boolean).join(' · ') || '—';
+
+      return `
+        <div class="pl-round-row">
+          <span class="pl-round-name">${ROUND_FULL_MAP[r.round] || r.name}</span>
+          <span class="pl-round-stats">${statLine}</span>
+          <span class="pl-round-pts">${isDouble ? `<span class="pl-2x-note">2×</span> ` : ''}+${r.total} pts</span>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="pl-card ${p.eliminated ? 'pl-eliminated' : ''}" onclick="togglePlayerCard(this)">
+        <div class="pl-card-main">
+          <div class="pl-rank">${rankMedal || rankLabel}</div>
+          <div class="pl-info">
+            <div class="pl-name">${esc(p.name)}
+              ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
+              ${p.eliminated ? `<span class="pl-out-badge">Out R${p.eliminatedRound || '?'}</span>` : ''}
+            </div>
+            <div class="pl-meta">
+              <span class="seed-badge ${isDouble ? 'double' : ''}">${p.seed}</span>
+              ${esc(p.team)} · ${esc(p.position)} · <span class="pl-mgr">${esc(p.mgrName)}'s pick</span>
+            </div>
+          </div>
+          <div class="pl-pts">${p.totalPts}<span class="pl-pts-label">pts</span></div>
+        </div>
+        ${p.rounds.length ? `<div class="pl-breakdown">${roundRows}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = `<div class="pl-list">${cards}</div>`;
+}
+
+function togglePlayerCard(card) {
+  card.classList.toggle('pl-expanded');
+}
+
 // ─── ADD PLAYER MODAL ─────────────────────────────────────
 
 // Public entry point — gated by admin
@@ -634,12 +723,11 @@ function fillPlayerFromEspn(idx) {
 // ─── ESPN: Sync Stats ──────────────────────────────────────
 
 function syncStats() {
-  requireAdmin(() => _doSync());
+  _doSync();
 }
 
-// Silent background sync (no password prompt — only called when already unlocked)
+// Silent background sync — runs for everyone, no admin required
 async function autoSyncStats() {
-  if (!adminUnlocked) return;
   try { await _doSync(true); } catch (e) { console.warn('Auto-sync failed:', e); }
 }
 
@@ -699,7 +787,7 @@ async function _doSync(silent = false) {
     updateLastSyncDisplay();
 
     if (!silent) showToast(`Synced stats for ${totalSynced} player(s)`);
-    else if (totalSynced > 0) showToast(`Auto-synced ${totalSynced} player stat(s)`);
+    else if (totalSynced > 0) showToast('Stats updated');
 
   } catch (e) {
     if (!silent) showToast('Sync failed: ' + e.message, true);
@@ -1071,11 +1159,9 @@ function isTournamentHours() {
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
 
-  // Auto-refresh every 5 minutes; ESPN sync if tournament hours + admin unlocked
-  setInterval(() => {
-    loadData(true);
-    if (isTournamentHours()) autoSyncStats();
-  }, 5 * 60 * 1000);
+  // Auto-refresh every 30 seconds; ESPN sync every 10 minutes during tournament hours
+  setInterval(() => loadData(true), 30 * 1000);
+  setInterval(() => { if (isTournamentHours()) autoSyncStats(); }, 10 * 60 * 1000);
 
   // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
