@@ -34,13 +34,10 @@ function toggleChat() {
     updateChatBadge();
     renderChatMessages();
 
+    // Focus the right input — display state is already correct from init or setChatName()
     if (getChatName()) {
-      document.getElementById('chat-name-setup').style.display = 'none';
-      document.getElementById('chat-compose').style.display    = 'flex';
       setTimeout(() => document.getElementById('chat-input').focus(), 80);
     } else {
-      document.getElementById('chat-name-setup').style.display = 'flex';
-      document.getElementById('chat-compose').style.display    = 'none';
       setTimeout(() => document.getElementById('chat-name-input').focus(), 80);
     }
   } else {
@@ -192,6 +189,16 @@ async function chatSend() {
 
 // ─── Init ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Pre-wire the correct section based on localStorage so the
+  // panel is ready the instant it opens — no flicker, no re-prompt.
+  if (getChatName()) {
+    document.getElementById('chat-name-setup').style.display = 'none';
+    document.getElementById('chat-compose').style.display    = 'flex';
+  } else {
+    document.getElementById('chat-name-setup').style.display = 'flex';
+    document.getElementById('chat-compose').style.display    = 'none';
+  }
+
   // Initial fetch
   chatPoll();
 
