@@ -19,7 +19,7 @@
     { "id": "kyle4", "name": "Patrick Ngongba III", "team": "Duke",       "seed": 1, "position": "F",  "managerId": "kyle", "eliminated": false, "eliminatedRound": null },
     { "id": "kyle5", "name": "Morez Johnson Jr",    "team": "Michigan",   "seed": 1, "position": "F",  "managerId": "kyle", "eliminated": false, "eliminatedRound": null },
 
-    { "id": "matt1", "name": "Tristen Newton",  "team": "UConn",     "seed": 1, "position": "G", "managerId": "matt", "eliminated": false, "eliminatedRound": null },
+    { "id": "matt1", "name": "Flory Bidunga",   "team": "Kansas",    "seed": 4, "position": "C", "managerId": "matt", "eliminated": false, "eliminatedRound": null },
     { "id": "matt2", "name": "Darryn Peterson", "team": "Kansas",    "seed": 4, "position": "G", "managerId": "matt", "eliminated": false, "eliminatedRound": null },
     { "id": "matt3", "name": "Zuby Ejiofor",      "team": "St. John's",    "seed": 2, "position": "PF", "managerId": "matt", "eliminated": false, "eliminatedRound": null },
     { "id": "matt4", "name": "Nick Boyd",         "team": "Wisconsin",     "seed": 3, "position": "G",  "managerId": "matt", "eliminated": false, "eliminatedRound": null },
