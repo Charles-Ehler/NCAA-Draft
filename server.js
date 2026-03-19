@@ -1,5 +1,4 @@
 const express = require('express');
-const fs      = require('fs');
 const path    = require('path');
 const https   = require('https');
 
@@ -7,7 +6,9 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const DATA_FILE = path.join(__dirname, 'data.json');
+// ── JSONbin config ─────────────────────────────────────────
+const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69bb5f21aa77b81da9f9bc3d';
+const JSONBIN_KEY = '$2a$10$Qjr41H9zdqcfVa2gj3iPWu/5.U4lhj7v6nqdIJXZC4/mZfBHIRkUW';
 
 const INITIAL_DATA = {
   managers: [
@@ -28,16 +29,22 @@ const ROUND_NAMES = {
   4: 'Elite 8',     5: 'Final Four',  6: 'Championship'
 };
 
-function getData() {
-  try {
-    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-  } catch {
-    return JSON.parse(JSON.stringify(INITIAL_DATA));
-  }
+async function getData() {
+  const res = await fetch(`${JSONBIN_URL}/latest`, {
+    headers: { 'X-Master-Key': JSONBIN_KEY }
+  });
+  if (!res.ok) throw new Error(`JSONbin GET failed: ${res.status}`);
+  const json = await res.json();
+  return json.record ?? JSON.parse(JSON.stringify(INITIAL_DATA));
 }
 
-function saveData(data) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+async function saveData(data) {
+  const res = await fetch(JSONBIN_URL, {
+    method:  'PUT',
+    headers: { 'X-Master-Key': JSONBIN_KEY, 'Content-Type': 'application/json' },
+    body:    JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error(`JSONbin PUT failed: ${res.status}`);
 }
 
 // ── ESPN proxy helper ──────────────────────────────────────
@@ -116,122 +123,150 @@ app.get('/api/espn/summary/:eventId', async (req, res) => {
 });
 
 // ── Meta (tournament teams cache + last sync time) ─────────
-app.put('/api/meta', (req, res) => {
-  const data    = getData();
-  const allowed = ['tournamentTeams', 'lastSync'];
-  for (const key of allowed) {
-    if (key in req.body) data[key] = req.body[key];
+app.put('/api/meta', async (req, res) => {
+  try {
+    const data    = await getData();
+    const allowed = ['tournamentTeams', 'lastSync'];
+    for (const key of allowed) {
+      if (key in req.body) data[key] = req.body[key];
+    }
+    await saveData(data);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(502).json({ error: e.message });
   }
-  saveData(data);
-  res.json({ success: true });
 });
 
 // ── Existing data routes ───────────────────────────────────
 
-app.get('/api/data', (req, res) => {
-  res.json(getData());
-});
-
-app.post('/api/players', (req, res) => {
-  const data = getData();
-  const { name, team, seed, position, managerId } = req.body;
-
-  if (!name || !team || !seed || !position || !managerId)
-    return res.status(400).json({ error: 'All fields are required' });
-
-  const manager = data.managers.find(m => m.id === managerId);
-  if (!manager) return res.status(400).json({ error: 'Manager not found' });
-
-  if (data.players.filter(p => p.managerId === managerId).length >= 5)
-    return res.status(400).json({ error: `${manager.name} already has 5 players` });
-
-  const seedNum = parseInt(seed);
-  if (isNaN(seedNum) || seedNum < 1 || seedNum > 16)
-    return res.status(400).json({ error: 'Seed must be between 1 and 16' });
-
-  const player = {
-    id:             Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-    name:           name.trim(),
-    team:           team.trim(),
-    seed:           seedNum,
-    position:       position.trim().toUpperCase(),
-    managerId,
-    eliminated:     false,
-    eliminatedRound: null
-  };
-
-  data.players.push(player);
-  saveData(data);
-  res.json(player);
-});
-
-app.put('/api/players/:id', (req, res) => {
-  const data   = getData();
-  const player = data.players.find(p => p.id === req.params.id);
-  if (!player) return res.status(404).json({ error: 'Player not found' });
-
-  for (const key of ['eliminated', 'eliminatedRound']) {
-    if (key in req.body) player[key] = req.body[key];
+app.get('/api/data', async (req, res) => {
+  try {
+    res.json(await getData());
+  } catch (e) {
+    res.status(502).json({ error: e.message });
   }
-  saveData(data);
-  res.json(player);
 });
 
-app.delete('/api/players/:id', (req, res) => {
-  const data = getData();
-  const idx  = data.players.findIndex(p => p.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Player not found' });
+app.post('/api/players', async (req, res) => {
+  try {
+    const data = await getData();
+    const { name, team, seed, position, managerId } = req.body;
 
-  data.players.splice(idx, 1);
-  for (const round of data.rounds) {
-    round.stats = round.stats.filter(s => s.playerId !== req.params.id);
+    if (!name || !team || !seed || !position || !managerId)
+      return res.status(400).json({ error: 'All fields are required' });
+
+    const manager = data.managers.find(m => m.id === managerId);
+    if (!manager) return res.status(400).json({ error: 'Manager not found' });
+
+    if (data.players.filter(p => p.managerId === managerId).length >= 5)
+      return res.status(400).json({ error: `${manager.name} already has 5 players` });
+
+    const seedNum = parseInt(seed);
+    if (isNaN(seedNum) || seedNum < 1 || seedNum > 16)
+      return res.status(400).json({ error: 'Seed must be between 1 and 16' });
+
+    const player = {
+      id:              Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      name:            name.trim(),
+      team:            team.trim(),
+      seed:            seedNum,
+      position:        position.trim().toUpperCase(),
+      managerId,
+      eliminated:      false,
+      eliminatedRound: null
+    };
+
+    data.players.push(player);
+    await saveData(data);
+    res.json(player);
+  } catch (e) {
+    res.status(502).json({ error: e.message });
   }
-  saveData(data);
-  res.json({ success: true });
 });
 
-app.post('/api/stats', (req, res) => {
-  const data = getData();
-  const { round, playerId, stats } = req.body;
+app.put('/api/players/:id', async (req, res) => {
+  try {
+    const data   = await getData();
+    const player = data.players.find(p => p.id === req.params.id);
+    if (!player) return res.status(404).json({ error: 'Player not found' });
 
-  if (!round || !playerId || !stats)
-    return res.status(400).json({ error: 'round, playerId, and stats are required' });
-
-  let roundData = data.rounds.find(r => r.round === round);
-  if (!roundData) {
-    roundData = { round, name: ROUND_NAMES[round] || `Round ${round}`, stats: [] };
-    data.rounds.push(roundData);
-    data.rounds.sort((a, b) => a.round - b.round);
+    for (const key of ['eliminated', 'eliminatedRound']) {
+      if (key in req.body) player[key] = req.body[key];
+    }
+    await saveData(data);
+    res.json(player);
+  } catch (e) {
+    res.status(502).json({ error: e.message });
   }
-
-  const entry = {
-    playerId,
-    points:    parseFloat(stats.points)    || 0,
-    rebounds:  parseFloat(stats.rebounds)  || 0,
-    assists:   parseFloat(stats.assists)   || 0,
-    blocks:    parseFloat(stats.blocks)    || 0,
-    steals:    parseFloat(stats.steals)    || 0,
-    turnovers: parseFloat(stats.turnovers) || 0
-  };
-
-  const existingIdx = roundData.stats.findIndex(s => s.playerId === playerId);
-  if (existingIdx >= 0) roundData.stats[existingIdx] = entry;
-  else                  roundData.stats.push(entry);
-
-  saveData(data);
-  res.json({ success: true });
 });
 
-app.delete('/api/stats/:round/:playerId', (req, res) => {
-  const data      = getData();
-  const roundNum  = parseInt(req.params.round);
-  const roundData = data.rounds.find(r => r.round === roundNum);
+app.delete('/api/players/:id', async (req, res) => {
+  try {
+    const data = await getData();
+    const idx  = data.players.findIndex(p => p.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Player not found' });
 
-  if (roundData) {
-    roundData.stats = roundData.stats.filter(s => s.playerId !== req.params.playerId);
-    saveData(data);
+    data.players.splice(idx, 1);
+    for (const round of data.rounds) {
+      round.stats = round.stats.filter(s => s.playerId !== req.params.id);
+    }
+    await saveData(data);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(502).json({ error: e.message });
   }
-  res.json({ success: true });
+});
+
+app.post('/api/stats', async (req, res) => {
+  try {
+    const data = await getData();
+    const { round, playerId, stats } = req.body;
+
+    if (!round || !playerId || !stats)
+      return res.status(400).json({ error: 'round, playerId, and stats are required' });
+
+    let roundData = data.rounds.find(r => r.round === round);
+    if (!roundData) {
+      roundData = { round, name: ROUND_NAMES[round] || `Round ${round}`, stats: [] };
+      data.rounds.push(roundData);
+      data.rounds.sort((a, b) => a.round - b.round);
+    }
+
+    const entry = {
+      playerId,
+      points:    parseFloat(stats.points)    || 0,
+      rebounds:  parseFloat(stats.rebounds)  || 0,
+      assists:   parseFloat(stats.assists)   || 0,
+      blocks:    parseFloat(stats.blocks)    || 0,
+      steals:    parseFloat(stats.steals)    || 0,
+      turnovers: parseFloat(stats.turnovers) || 0
+    };
+
+    const existingIdx = roundData.stats.findIndex(s => s.playerId === playerId);
+    if (existingIdx >= 0) roundData.stats[existingIdx] = entry;
+    else                  roundData.stats.push(entry);
+
+    await saveData(data);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+app.delete('/api/stats/:round/:playerId', async (req, res) => {
+  try {
+    const data      = await getData();
+    const roundNum  = parseInt(req.params.round);
+    const roundData = data.rounds.find(r => r.round === roundNum);
+
+    if (roundData) {
+      roundData.stats = roundData.stats.filter(s => s.playerId !== req.params.playerId);
+      await saveData(data);
+    }
+    res.json({ success: true });
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
