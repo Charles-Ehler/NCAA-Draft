@@ -17,7 +17,7 @@
     <div class="header-inner">
       <div>
         <div class="header-title">Dig Bicken with the Boys</div>
-        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In &nbsp;<span id="version-badge" style="opacity:0.4;font-size:0.7em;font-weight:400;letter-spacing:0.05em">v10</span></div>
+        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In &nbsp;<span id="version-badge" style="opacity:0.4;font-size:0.7em;font-weight:400;letter-spacing:0.05em">v11</span></div>
       </div>
       <div class="header-badge">Rock Chalk!</div>
     </div>
@@ -349,6 +349,17 @@
 
   <!-- Player tooltip -->
   <div id="player-tooltip" class="player-tooltip-popup" aria-hidden="true"></div>
+
+  <!-- ── CALLOUT CARD ── -->
+  <div id="callout-card" class="callout-card" onclick="calloutTap(event)">
+    <div id="callout-accent" class="callout-accent"></div>
+    <div id="callout-emoji" class="callout-emoji"></div>
+    <div class="callout-body">
+      <div id="callout-text" class="callout-text"></div>
+      <div class="callout-hint">tap for next →</div>
+    </div>
+    <button class="callout-x" onclick="event.stopPropagation();dismissCallout()" aria-label="Dismiss">✕</button>
+  </div>
 
   <!-- ── CHAT ── -->
   <button id="chat-bubble" class="chat-bubble" onclick="toggleChat()" title="Talk Shit">

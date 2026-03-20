@@ -1649,3 +1649,88 @@ main {
   .pl-card-main { padding: 12px 14px; }
   .lb-card-header { padding: 12px 14px; }
 }
+
+/* ── CALLOUT CARD ────────────────────────────────────────── */
+.callout-card {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(56px + env(safe-area-inset-bottom) + 10px);
+  margin: 0 auto;
+  width: calc(100% - 32px);
+  max-width: 448px;
+  background: #0a1628;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  display: flex;
+  align-items: stretch;
+  z-index: 148;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+  cursor: pointer;
+  transform: translateY(calc(100% + 70px));
+  opacity: 0;
+  transition: transform 0.25s ease-out, opacity 0.22s ease-out;
+}
+.callout-card.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+.callout-accent {
+  width: 3px;
+  background: var(--crimson);
+  flex-shrink: 0;
+  align-self: stretch;
+}
+.callout-accent.gold { background: var(--gold); }
+.callout-accent.blue { background: var(--blue); }
+.callout-emoji {
+  width: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.45rem;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
+}
+.callout-body {
+  flex: 1;
+  padding: 11px 6px 10px 0;
+  min-width: 0;
+}
+.callout-text {
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+  transition: opacity 0.12s;
+}
+.callout-hint {
+  font-size: 10px;
+  color: rgba(255,255,255,0.38);
+  margin-top: 5px;
+  text-align: right;
+  padding-right: 2px;
+}
+.callout-x {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.38);
+  font-size: 0.95rem;
+  width: 36px;
+  min-height: 44px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 11px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.12s;
+  touch-action: manipulation;
+}
+.callout-x:hover { color: rgba(255,255,255,0.75); }
+
+@media (min-width: 768px) {
+  .callout-card { bottom: 20px; }
+}

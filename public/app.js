@@ -116,6 +116,7 @@ async function loadData(silent = false) {
     renderAll();
     updateLastSyncDisplay();
     updateTeamsStatus();
+    generateCallouts();
     if (bar) { bar.style.width = '100%'; setTimeout(() => { bar.style.width = '0%'; bar.classList.remove('active'); }, 300); }
   } catch (e) {
     if (bar) { bar.style.width = '0%'; bar.classList.remove('active'); }
@@ -1202,6 +1203,436 @@ function isTournamentHours() {
   const now    = new Date();
   const ctHour = (now.getUTCHours() - 5 + 24) % 24;
   return ctHour >= 12;
+}
+
+// ─── CALLOUT CARD ─────────────────────────────────────────
+
+let callouts           = [];
+let calloutIdx         = 0;
+let calloutTimer       = null;
+let calloutVisible     = false;
+let calloutInitialized = false;
+
+function generateCallouts() {
+  const { players, rounds, managers } = appData;
+  const result = [];
+  const push = (type, emoji, text) => result.push({ type, emoji, text });
+
+  // ── Pre-compute per-player stats ──────────────────────────
+  const pStats = players.map(p => {
+    const mul = p.seed >= 9 ? 2 : 1;
+    let pts = 0;
+    const raw = { pts: 0, reb: 0, ast: 0, blk: 0, stl: 0, to: 0 };
+    const played = [];
+    for (const r of rounds) {
+      const s = r.stats.find(x => x.playerId === p.id);
+      if (!s) continue;
+      const sc = round1(calcRoundScore(s, mul));
+      pts += sc;
+      raw.pts += s.points    || 0;
+      raw.reb += s.rebounds  || 0;
+      raw.ast += s.assists   || 0;
+      raw.blk += s.blocks    || 0;
+      raw.stl += s.steals    || 0;
+      raw.to  += s.turnovers || 0;
+      played.push({ r, s, sc });
+    }
+    pts = round1(pts);
+    const mgr = managers.find(m => m.id === p.managerId);
+    return { ...p, mul, pts, raw, played, mgrName: mgr?.name || '?' };
+  });
+
+  const mgrScores = managers.map(m => {
+    const pList = pStats.filter(p => p.managerId === m.id);
+    return { ...m, score: round1(pList.reduce((s, p) => s + p.pts, 0)), pList };
+  }).sort((a, b) => b.score - a.score);
+
+  const leader    = mgrScores[0];
+  const lastPlace = mgrScores[mgrScores.length - 1];
+  const hasStats  = pStats.some(p => p.played.length > 0);
+  const withStats = pStats.filter(p => p.played.length > 0);
+  const noStats   = pStats.filter(p => p.played.length === 0 && !p.eliminated);
+  const activePl  = pStats.filter(p => !p.eliminated);
+  const elimPl    = pStats.filter(p => p.eliminated);
+  const totalPts  = round1(pStats.reduce((s, p) => s + p.pts, 0));
+
+  const byPts = [...pStats].sort((a, b) => b.pts - a.pts);
+  const byAst = [...pStats].sort((a, b) => b.raw.ast - a.raw.ast);
+  const byReb = [...pStats].sort((a, b) => b.raw.reb - a.raw.reb);
+  const byBlk = [...pStats].sort((a, b) => b.raw.blk - a.raw.blk);
+  const byStl = [...pStats].sort((a, b) => b.raw.stl - a.raw.stl);
+  const byTO  = [...pStats].sort((a, b) => b.raw.to  - a.raw.to);
+  const byPPR = withStats.map(p => ({ ...p, ppr: round1(p.pts / p.played.length) }))
+                         .sort((a, b) => b.ppr - a.ppr);
+
+  let bestRound = null, worstRound = null;
+  for (const p of pStats) {
+    for (const entry of p.played) {
+      if (!bestRound  || entry.sc > bestRound.sc)  bestRound  = { p, ...entry };
+      if (!worstRound || entry.sc < worstRound.sc) worstRound = { p, ...entry };
+    }
+  }
+
+  // ── NO STATS YET ──────────────────────────────────────────
+  if (!hasStats) {
+    push('blue',   '🏀', `${players.length} players drafted across 5 managers. The tournament is about to get expensive.`);
+    push('gold',   '👀', `No stats yet. All 5 managers are sweating. Let the madness begin.`);
+    push('blue',   '📊', `First games start soon. Time to find out who actually did their homework.`);
+    push('crimson','😤', `The trash talk starts now. The receipts come later.`);
+  }
+
+  // ── ACHIEVEMENT (gold) ────────────────────────────────────
+  if (hasStats) {
+    if (leader.score > 0) {
+      push('gold', '🏆', `${leader.name} is winning with ${leader.score} pts. ${leader.name} is up $200 if the tournament ended right now.`);
+    }
+
+    const topActive = activePl.filter(p => p.pts > 0).sort((a, b) => b.pts - a.pts)[0];
+    if (topActive) {
+      push('gold', '⭐', `${topActive.name} is the highest scoring active player with ${topActive.pts} pts. ${topActive.mgrName} looks like a genius.`);
+    }
+
+    if (bestRound) {
+      push('gold', '💥', `${bestRound.p.name} had the best single round with ${bestRound.sc} pts in ${ROUND_FULL[bestRound.r.round] || bestRound.r.name}.`);
+    }
+
+    if (byAst[0]?.raw.ast >= 4) {
+      const p = byAst[0];
+      push('gold', '🎯', `${p.name} has ${p.raw.ast} assists this tournament. At 1.5× that's ${round1(p.raw.ast * 1.5 * p.mul)} pts from dimes alone.`);
+    }
+
+    if (byBlk[0]?.raw.blk >= 2) {
+      const p = byBlk[0];
+      push('gold', '🧱', `${p.name} has ${p.raw.blk} blocks this tournament. ${p.mgrName} is cashing in — that's ${round1(p.raw.blk * 2 * p.mul)} pts just from shot blocking.`);
+    }
+
+    if (byStl[0]?.raw.stl >= 2) {
+      const p = byStl[0];
+      push('gold', '🕵️', `${p.name} has ${p.raw.stl} steals this tournament. At 2× per steal that's ${round1(p.raw.stl * 2 * p.mul)} pts just from being a menace.`);
+    }
+
+    if (byReb[0]?.raw.reb >= 5) {
+      const p = byReb[0];
+      push('gold', '📦', `${p.name} has more rebounds than anyone in this draft with ${p.raw.reb} total. ${p.mgrName} loves a board man.`);
+    }
+
+    const dblDbl = pStats.flatMap(p => p.played
+      .filter(({ s }) => s.points >= 10 && s.rebounds >= 10)
+      .map(({ r }) => ({ p, r }))
+    );
+    if (dblDbl.length > 0) {
+      const dd = dblDbl[0];
+      push('gold', '🎊', `${dd.p.name} dropped a double-double in ${ROUND_FULL[dd.r.round] || dd.r.name}. ${dd.p.mgrName} knew what they were doing.`);
+    }
+
+    if (byPts[0]?.pts > 0) {
+      const p = byPts[0];
+      push('gold', '🔑', `Most valuable pick so far: ${p.name} with ${p.pts} pts for ${p.mgrName}. What a selection.`);
+    }
+
+    const topDouble = pStats.filter(p => p.mul === 2 && p.pts > 0).sort((a, b) => b.pts - a.pts)[0];
+    if (topDouble) {
+      push('gold', '✌️', `The 2× multiplier is paying off. ${topDouble.name} (Seed ${topDouble.seed}) has earned ${round1(topDouble.pts / 2)} bonus pts from the double multiplier.`);
+    }
+
+    if (byPPR[0]?.ppr > 0) {
+      push('gold', '📈', `${byPPR[0].name} is averaging ${byPPR[0].ppr} pts per round played. That pace wins this thing.`);
+    }
+
+    const topActiveMgr = [...mgrScores].sort((a, b) =>
+      b.pList.filter(p => !p.eliminated).length - a.pList.filter(p => !p.eliminated).length
+    )[0];
+    if (topActiveMgr.pList.filter(p => !p.eliminated).length >= 4) {
+      const n = topActiveMgr.pList.filter(p => !p.eliminated).length;
+      push('gold', '💪', `${topActiveMgr.name} has ${n} players still active. More chances. More hope.`);
+    }
+
+    for (const m of mgrScores) {
+      if (m.score <= 0) continue;
+      const top = [...m.pList].sort((a, b) => b.pts - a.pts)[0];
+      if (!top || top.pts <= 0) continue;
+      const pct = Math.round((top.pts / m.score) * 100);
+      if (pct >= 60) {
+        push('gold', '🏋️', `${m.name} has ${pct}% of their pts from one player. ${top.name} is carrying the whole roster.`);
+        break;
+      }
+    }
+
+    const cleanPlayer = withStats.find(p => p.raw.to === 0 && p.played.length >= 2);
+    if (cleanPlayer) {
+      push('gold', '🧹', `${cleanPlayer.name} played ${cleanPlayer.played.length} rounds without a turnover. Clean. Efficient. Unstoppable.`);
+    }
+
+    if (withStats.length > 0 && leader.score > 0) {
+      const worstOfLeader = [...leader.pList].sort((a, b) => a.pts - b.pts)[0];
+      if (worstOfLeader?.pts > 0) {
+        push('gold', '💎', `${leader.name}'s worst player has ${worstOfLeader.pts} pts. Even the bench is producing.`);
+      }
+    }
+  }
+
+  // ── TRASH TALK (crimson) ───────────────────────────────────
+  if (hasStats) {
+    if (lastPlace.score < leader.score) {
+      push('crimson', '💀', `${lastPlace.name} is in last place with ${lastPlace.score} pts. There's still time. Probably.`);
+    }
+
+    for (const m of mgrScores) {
+      const zeroCnt = m.pList.filter(p => p.pts === 0).length;
+      if (zeroCnt >= 2) {
+        push('crimson', '😬', `${m.name} has ${zeroCnt} players with 0 pts. The optimism is admirable.`);
+        break;
+      }
+    }
+
+    const topElimMgr = [...mgrScores].sort((a, b) =>
+      b.pList.filter(p => p.eliminated).length - a.pList.filter(p => p.eliminated).length
+    )[0];
+    const topElimCnt = topElimMgr.pList.filter(p => p.eliminated).length;
+    if (topElimCnt >= 2) {
+      push('crimson', '⚰️', `${topElimMgr.name} has ${topElimCnt} eliminated players. Rough tournament. Really rough.`);
+    }
+
+    const gapTotal = round1(leader.score - lastPlace.score);
+    if (gapTotal > 15) {
+      push('crimson', '📉', `The gap between 1st and last is ${gapTotal} pts. ${lastPlace.name} is not having a good time.`);
+    }
+
+    if (mgrScores.length >= 2 && mgrScores[1].score < leader.score) {
+      const gap2 = round1(leader.score - mgrScores[1].score);
+      if (gap2 > 10) {
+        push('crimson', '🔭', `${mgrScores[1].name} is ${gap2} pts behind ${leader.name}. One good game could change everything. Probably won't though.`);
+      }
+    }
+
+    const elimWithPts = elimPl.filter(p => p.pts > 0).sort((a, b) => b.pts - a.pts);
+    if (elimWithPts.length > 0) {
+      const e = elimWithPts[0];
+      push('crimson', '😔', `${e.name} scored ${e.pts} pts then got eliminated in ${ROUND_SHORT[e.eliminatedRound] || '?'}. ${e.mgrName} felt that.`);
+    }
+
+    if (byTO[0]?.raw.to >= 3) {
+      const p = byTO[0];
+      push('crimson', '🤦', `${p.name} has ${p.raw.to} turnovers this tournament. That's −${p.raw.to} pts handed back. ${p.mgrName} is furious.`);
+    }
+
+    if (gapTotal > 30) {
+      push('crimson', '🚗', `${lastPlace.name} is ${gapTotal} pts behind the leader. They would need a miracle. Or cheating.`);
+    }
+
+    for (const m of mgrScores) {
+      const teamCounts = m.pList.reduce((a, p) => { a[p.team] = (a[p.team] || 0) + 1; return a; }, {});
+      const [dupTeam, cnt] = Object.entries(teamCounts).sort((a, b) => b[1] - a[1])[0] || [];
+      if (cnt >= 2) {
+        push('crimson', '🤔', `${m.name} drafted ${cnt} players from ${dupTeam}. Bold strategy. Concerning strategy.`);
+        break;
+      }
+    }
+
+    push('crimson', '💸', `${lastPlace.name} is currently winning $0. Just putting that out there.`);
+
+    if (noStats.length >= 4) {
+      push('crimson', '⏳', `${noStats.length} players haven't scored yet. Their managers are waiting nervously.`);
+    }
+
+    const badElimCnt = lastPlace.pList.filter(p => p.eliminated).length;
+    const lastRank   = mgrScores.findIndex(m => m.id === lastPlace.id) + 1;
+    push('crimson', '🚨', `Not to alarm anyone but ${lastPlace.name} is in ${ordinal(lastRank)} place and has ${badElimCnt} eliminated player${badElimCnt !== 1 ? 's' : ''}.`);
+
+    if (leader.score !== lastPlace.score) {
+      push('crimson', '🪞', `${leader.name} has ${leader.score} pts. ${lastPlace.name} has ${lastPlace.score} pts. Math is hard for ${lastPlace.name} right now.`);
+    }
+
+    if (mgrScores.length >= 2) {
+      const secondToLast = mgrScores[mgrScores.length - 2];
+      const gapUp = round1(secondToLast.score - lastPlace.score);
+      if (gapUp > 5) {
+        push('crimson', '🪦', `${secondToLast.name} has ${gapUp} more pts than ${lastPlace.name}. ${lastPlace.name} can see them in the rearview. Wait — no they can't.`);
+      }
+    }
+
+    const activeLow = activePl.filter(p => p.pts > 0).sort((a, b) => a.pts - b.pts)[0];
+    if (activeLow && byPts[0] && activeLow.pts < byPts[0].pts / 4) {
+      push('crimson', '🥴', `${activeLow.mgrName} spent a pick on ${activeLow.name} who has contributed ${activeLow.pts} pts. Big swing. Questionable results.`);
+    }
+  }
+
+  // ── STAT FACTS (blue) ─────────────────────────────────────
+  if (hasStats) {
+    if (totalPts > 0) {
+      push('blue', '📊', `Total fantasy pts scored so far across all managers: ${totalPts}. The tournament is just getting started.`);
+    }
+
+    if (bestRound) {
+      push('blue', '🎰', `The highest single-round score is ${bestRound.sc} pts by ${bestRound.p.name} in ${ROUND_FULL[bestRound.r.round] || bestRound.r.name}.`);
+    }
+
+    push('blue', '🗺️', `${withStats.length} of 25 players have scored. ${elimPl.length} have been eliminated. ${25 - elimPl.length} are still dancing.`);
+
+    if (byBlk[0]?.raw.blk > 0) {
+      const p = byBlk[0];
+      push('blue', '🏗️', `Blocks are worth 2×. ${p.name} leads with ${p.raw.blk} blocks worth ${round1(p.raw.blk * 2 * p.mul)} fantasy pts.`);
+    }
+
+    if (byAst[0]?.raw.ast > 0) {
+      const p = byAst[0];
+      push('blue', '🎭', `Assists are worth 1.5×. ${p.name} leads with ${p.raw.ast} assists worth ${round1(p.raw.ast * 1.5 * p.mul)} fantasy pts.`);
+    }
+
+    if (byStl[0]?.raw.stl > 0) {
+      const p = byStl[0];
+      push('blue', '🎪', `Steals are worth 2×. ${p.name} has ${p.raw.stl} steals this tournament worth ${round1(p.raw.stl * 2 * p.mul)} fantasy pts.`);
+    }
+
+    if (mgrScores.length >= 2 && mgrScores[0].score > 0 && mgrScores[1].score >= 0) {
+      const gap = round1(mgrScores[0].score - mgrScores[1].score);
+      if (gap > 0) push('blue', '📐', `The gap between 1st and 2nd place is ${gap} pts. ${mgrScores[1].name} needs a big game.`);
+    }
+
+    const doubleBonus = round1(pStats.filter(p => p.mul === 2).reduce((s, p) => s + round1(p.pts / 2), 0));
+    if (doubleBonus > 0) {
+      push('blue', '⚡', `The 2× multiplier has generated ${doubleBonus} extra pts across all Seed 9–16 players.`);
+    }
+
+    if (byTO[0]?.raw.to >= 2) {
+      const p = byTO[0];
+      push('blue', '🔄', `${p.name} leads in turnovers with ${p.raw.to} this tournament. That's −${p.raw.to} pts. Ouch.`);
+    }
+
+    if (byReb[0]?.raw.reb > 0) {
+      const p = byReb[0];
+      push('blue', '📦', `${p.name} has ${p.raw.reb} total rebounds this tournament worth ${round1(p.raw.reb * 1.2 * p.mul)} fantasy pts just from boards.`);
+    }
+
+    if (worstRound && withStats.length > 3) {
+      push('blue', '📉', `Lowest single-round score: ${worstRound.p.name} with ${worstRound.sc} pts in ${ROUND_FULL[worstRound.r.round] || worstRound.r.name}. It happens.`);
+    }
+
+    if (activePl.length > 0 && totalPts > 0) {
+      const avg = round1(totalPts / activePl.length);
+      const topAct = byPts.find(p => !p.eliminated);
+      if (topAct && topAct.pts > avg) {
+        push('blue', '📏', `Average pts per active player: ${avg}. ${topAct.name} is well above that at ${topAct.pts}.`);
+      }
+    }
+
+    if (byPPR[0]?.ppr > 0 && byPPR[0].played.length >= 2) {
+      const p = byPPR[0];
+      push('blue', '⚡', `${p.name} played ${p.played.length} rounds and scored ${p.pts} total pts — ${p.ppr} pts per round.`);
+    }
+
+    if (byAst[0]?.raw.ast > 0) {
+      push('blue', '🤝', `Most assists: ${byAst[0].name} with ${byAst[0].raw.ast}. Playmakers score big in this format.`);
+    }
+
+    if (byBlk[0]?.raw.blk > 0) {
+      push('blue', '🛡️', `Most blocks: ${byBlk[0].name} with ${byBlk[0].raw.blk}. Rim protection is worth 2× here.`);
+    }
+
+    if (byStl[0]?.raw.stl > 0) {
+      const p = byStl[0];
+      push('blue', '🕵️', `Most steals: ${p.name} with ${p.raw.stl} worth ${round1(p.raw.stl * 2 * p.mul)} pts at the 2× rate.`);
+    }
+
+    const seed916 = pStats.filter(p => p.mul === 2);
+    if (seed916.length > 0) {
+      const s = seed916[Math.floor(Math.random() * seed916.length)];
+      push('blue', '🎲', `Seeds 9–16 get 2×. ${s.mgrName}'s ${s.name} (Seed ${s.seed}) is worth double every single stat.`);
+    }
+
+    const gamesPerRound = [32, 16, 8, 4, 2, 1];
+    const maxRound = rounds.length > 0 ? Math.max(...rounds.map(r => r.round)) : 0;
+    const gamesPlayed = gamesPerRound.slice(0, maxRound).reduce((s, g) => s + g, 0);
+    if (gamesPlayed > 0) {
+      push('blue', '🗓️', `${gamesPlayed} tournament games played so far. ${63 - gamesPlayed} more to go before a champion is crowned.`);
+    }
+  }
+
+  // ── Shuffle ────────────────────────────────────────────────
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+
+  callouts = result;
+
+  const card = document.getElementById('callout-card');
+  if (!card) return;
+
+  if (callouts.length < 3) {
+    card.classList.remove('visible');
+    calloutVisible = false;
+    return;
+  }
+
+  if (!calloutInitialized) {
+    calloutInitialized = true;
+    calloutIdx = 0;
+    setTimeout(() => _showCallout(true), 1800); // delay on first page load
+  } else if (calloutVisible) {
+    _applyCallout(callouts[calloutIdx % callouts.length]); // refresh current text
+  }
+  // If not visible (dismissed), the timer will pick up fresh callouts automatically
+}
+
+function _applyCallout(c, animate = false) {
+  const textEl   = document.getElementById('callout-text');
+  const emojiEl  = document.getElementById('callout-emoji');
+  const accentEl = document.getElementById('callout-accent');
+  if (!textEl) return;
+
+  const doSwap = () => {
+    textEl.textContent  = c.text;
+    emojiEl.textContent = c.emoji;
+    accentEl.className  = 'callout-accent' + (c.type === 'gold' ? ' gold' : c.type === 'blue' ? ' blue' : '');
+  };
+
+  if (animate) {
+    textEl.style.opacity  = '0';
+    emojiEl.style.opacity = '0';
+    setTimeout(() => {
+      doSwap();
+      textEl.style.opacity  = '1';
+      emojiEl.style.opacity = '1';
+    }, 130);
+  } else {
+    doSwap();
+  }
+}
+
+function _showCallout() {
+  if (callouts.length === 0) return;
+  const card = document.getElementById('callout-card');
+  if (!card) return;
+
+  const c = callouts[calloutIdx % callouts.length];
+  calloutIdx = (calloutIdx + 1) % callouts.length;
+
+  _applyCallout(c, false);
+  card.style.display = ''; // ensure not hidden
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => card.classList.add('visible'));
+  });
+  calloutVisible = true;
+}
+
+function calloutTap() {
+  if (!calloutVisible || callouts.length === 0) return;
+  const c = callouts[calloutIdx % callouts.length];
+  calloutIdx = (calloutIdx + 1) % callouts.length;
+  _applyCallout(c, true);
+}
+
+function dismissCallout() {
+  const card = document.getElementById('callout-card');
+  if (!card) return;
+  card.classList.remove('visible');
+  calloutVisible = false;
+
+  if (calloutTimer) clearTimeout(calloutTimer);
+  calloutTimer = setTimeout(() => {
+    if (callouts.length >= 3) _showCallout();
+  }, 30_000);
 }
 
 // ─── INIT ─────────────────────────────────────────────────
