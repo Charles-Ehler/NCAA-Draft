@@ -765,102 +765,313 @@ main {
   transition: width 0.4s ease;
 }
 
-/* ──────────────── PLAYER STATS VIEW ──────────────── */
+/* ──────────────── PLAYER STATS VIEW (DARK SPORTS CARD) ──────────────── */
 
-.psv-header {
+/* Overlay: full-screen on mobile, centered on desktop */
+#player-stats-view { padding: 0; align-items: flex-end; }
+@media (min-width: 500px) {
+  #player-stats-view { padding: 20px; align-items: center; }
+  .psv-modal { border-radius: 16px !important; }
+}
+
+.psv-modal {
+  background: #0a1628;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 460px;
+  max-height: 93vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  animation: modalIn 0.2s ease-out both;
+}
+.psv-modal::-webkit-scrollbar { display: none; }
+
+/* ── Header ── */
+.psv-modal-header {
+  background: #0e1f3a;
+  padding: 28px 20px 26px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.psv-modal-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255,255,255,0.03) 0px,
+    rgba(255,255,255,0.03) 1px,
+    transparent 1px,
+    transparent 8px
+  );
+  pointer-events: none;
+}
+.psv-modal-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gold);
+}
+
+/* Eliminated stamp */
+.psv-elim-stamp {
+  position: absolute;
+  top: 18px;
+  right: -32px;
+  width: 160px;
+  text-align: center;
+  background: rgba(232, 0, 13, 0.88);
+  color: white;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  padding: 5px 0;
+  transform: rotate(15deg);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Seed circle */
+.psv-seed-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: white;
+  line-height: 1;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+.psv-seed-normal { background: var(--blue); box-shadow: 0 0 0 2px rgba(255,255,255,0.15); }
+.psv-seed-double { background: var(--crimson); box-shadow: 0 0 0 2px rgba(245,197,24,0.5); }
+.psv-seed-2x {
+  font-size: 11px;
+  color: var(--gold);
+  display: block;
+  line-height: 1;
+}
+
+.psv-player-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  color: white;
+  letter-spacing: 0.03em;
+  line-height: 1.05;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+.psv-player-meta {
+  font-size: 13px;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+.psv-drafted-pill {
+  display: inline-block;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.65);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Body ── */
+.psv-body { padding: 0; }
+
+.psv-double-banner {
+  background: rgba(245,197,24,0.1);
+  border-top: 1px solid rgba(245,197,24,0.2);
+  border-bottom: 1px solid rgba(245,197,24,0.2);
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.1em;
+  padding: 8px 16px;
+}
+
+/* Stat grid 3×2 */
+.psv-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.psv-stat-box {
+  text-align: center;
+  padding: 18px 8px 14px;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.01);
+}
+.psv-stat-box:nth-child(3n)   { border-right: none; }
+.psv-stat-box:nth-child(4),
+.psv-stat-box:nth-child(5),
+.psv-stat-box:nth-child(6)    { border-bottom: none; }
+.psv-stat-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 30px;
+  color: white;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+.psv-stat-to  { color: var(--crimson); }
+.psv-stat-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.35);
+}
+
+/* Fantasy pts hero */
+.psv-hero-bar {
+  background: rgba(232,0,13,0.12);
+  border-top: 1px solid rgba(232,0,13,0.25);
+  border-bottom: 1px solid rgba(232,0,13,0.25);
+  text-align: center;
+  padding: 16px;
+}
+.psv-hero-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 4px;
+}
+.psv-hero-pts {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 52px;
+  color: var(--gold);
+  line-height: 1;
+}
+.psv-hero-calc {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  margin-top: 5px;
+}
+
+/* Round breakdown */
+.psv-rounds-section { padding: 0; }
+.psv-section-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  padding: 14px 16px 6px;
+}
+.psv-rounds { padding: 0 16px 4px; }
+.psv-round-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  animation: psvFadeUp 0.3s ease-out both;
 }
-.psv-name {
-  font-size: 1.05rem;
-  font-weight: 800;
-  line-height: 1.2;
+.psv-round-card:last-child { border-bottom: none; }
+@keyframes psvFadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.psv-meta {
-  font-size: 0.78rem;
-  color: var(--gray-500);
-  margin-top: 2px;
-}
-.psv-drafted {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--blue);
-  margin-top: 3px;
-}
-.psv-elim-badge {
-  display: inline-block;
-  background: var(--gray-100);
-  color: var(--gray-500);
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 6px;
-  padding: 4px 10px;
-  margin-bottom: 12px;
-}
-.psv-double-note {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #b8860b;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 6px;
-  padding: 6px 10px;
-  margin-bottom: 12px;
-}
-.psv-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
-  margin-bottom: 16px;
-}
-.psv-table th {
-  text-align: center;
-  font-size: 0.68rem;
-  font-weight: 800;
-  color: var(--gray-500);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 5px 4px;
-  border-bottom: 2px solid var(--gray-100);
-}
-.psv-table th:first-child { text-align: left; }
-.psv-table td {
-  text-align: center;
-  padding: 7px 4px;
-  border-bottom: 1px solid var(--gray-100);
-  font-weight: 600;
-}
-.psv-table tr:last-child td { border-bottom: none; }
-.psv-round-name { text-align: left !important; font-weight: 700; color: var(--gray-600); }
-.psv-round-pts { font-weight: 800; color: var(--blue); }
-.psv-empty {
-  text-align: center;
-  color: var(--gray-400);
-  font-size: 0.85rem;
-  padding: 20px 0;
-  margin-bottom: 16px;
-}
-.psv-total {
-  text-align: center;
+.psv-rc-name {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 2.6rem;
+  font-size: 12px;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: 92px;
+}
+.psv-rc-summary {
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
+  flex: 1;
+  min-width: 0;
+}
+.psv-rc-pts {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
   color: var(--crimson);
-  line-height: 1;
-  padding-top: 8px;
-  border-top: 2px solid var(--gray-100);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
-.psv-total span {
-  display: block;
-  font-size: 0.8rem;
-  font-family: 'Inter', sans-serif;
+.psv-2x-badge {
+  font-size: 10px;
+  color: var(--gold);
+  background: rgba(245,197,24,0.12);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 700;
-  color: var(--gray-400);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-top: 2px;
 }
+.psv-no-stats {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 22px 16px;
+}
+
+/* Contribution bar */
+.psv-contrib-section {
+  padding: 12px 16px 16px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.psv-contrib-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 7px;
+}
+.psv-contrib-track {
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+}
+.psv-contrib-fill {
+  height: 4px;
+  background: var(--crimson);
+  border-radius: 2px;
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Footer */
+.psv-footer { padding: 0 16px 24px; }
+.psv-close-btn {
+  width: 100%;
+  height: 48px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.6);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 17px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.psv-close-btn:hover   { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.04); }
+.psv-close-btn:active  { background: rgba(255,255,255,0.08); }
 
 /* ──────────────── ROUND TABS ──────────────── */
 

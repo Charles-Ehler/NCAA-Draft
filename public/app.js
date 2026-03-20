@@ -993,58 +993,126 @@ function updateLastSyncDisplay() {
 // ─── STATS MODAL ──────────────────────────────────────────
 
 // Public entry point — gated by admin
-// ─── READ-ONLY PLAYER STATS VIEW ─────────────────────────
+// ─── READ-ONLY PLAYER STATS VIEW (dark sports card) ──────
+
+const ROUND_LONG = {
+  1: 'ROUND OF 64', 2: 'ROUND OF 32', 3: 'SWEET 16',
+  4: 'ELITE 8',     5: 'FINAL FOUR',  6: 'CHAMPIONSHIP'
+};
 
 function openPlayerStatsView(playerId) {
-  const p       = appData.players.find(pl => pl.id === playerId);
+  const p = appData.players.find(pl => pl.id === playerId);
   if (!p) return;
   const manager  = appData.managers.find(m => m.id === p.managerId);
   const isDouble = p.seed >= 9;
   const totalPts = calcPlayerScore(p);
-  const keys     = ['points','rebounds','assists','blocks','steals','turnovers'];
-  const labels   = ['PTS','REB','AST','BLK','STL','TO'];
+  const mgrTotal = manager ? calcManagerScore(manager.id) : 0;
+  const contribPct = mgrTotal > 0 ? Math.min(100, (totalPts / mgrTotal) * 100) : 0;
 
-  const roundRows = [1,2,3,4,5,6].map(r => {
+  // Aggregate totals across all rounds
+  const statKeys = ['points','rebounds','assists','blocks','steals','turnovers'];
+  const totals   = { points: 0, rebounds: 0, assists: 0, blocks: 0, steals: 0, turnovers: 0 };
+  for (const rd of appData.rounds) {
+    const stat = rd.stats.find(s => s.playerId === playerId);
+    if (stat) for (const k of statKeys) totals[k] += stat[k] || 0;
+  }
+  const baseScore = round1(calcRoundScore(totals, 1));
+
+  // Stat grid HTML
+  const statLabels = ['PTS','REB','AST','BLK','STL','TO'];
+  const statGrid = statKeys.map((k, i) => `
+    <div class="psv-stat-box">
+      <div class="psv-stat-val${k === 'turnovers' ? ' psv-stat-to' : ''}" data-target="${totals[k]}">0</div>
+      <div class="psv-stat-label">${statLabels[i]}</div>
+    </div>
+  `).join('');
+
+  // Round breakdown HTML
+  const roundCards = [1,2,3,4,5,6].map((r, i) => {
     const rd   = appData.rounds.find(ro => ro.round === r);
     const stat = rd?.stats.find(s => s.playerId === playerId);
     if (!stat) return null;
-    const mult    = isDouble ? 2 : 1;
-    const roundPts = round1(calcRoundScore(stat, mult));
+    const roundPts = round1(calcRoundScore(stat, isDouble ? 2 : 1));
+    const parts = [];
+    if (stat.points)    parts.push(`${stat.points}pts`);
+    if (stat.rebounds)  parts.push(`${stat.rebounds}reb`);
+    if (stat.assists)   parts.push(`${stat.assists}ast`);
+    if (stat.blocks)    parts.push(`${stat.blocks}blk`);
+    if (stat.steals)    parts.push(`${stat.steals}stl`);
+    if (stat.turnovers) parts.push(`${stat.turnovers}to`);
     return `
-      <tr>
-        <td class="psv-round-name">${ROUND_SHORT[r] || `R${r}`}</td>
-        ${keys.map(k => `<td>${stat[k] !== undefined ? stat[k] : '—'}</td>`).join('')}
-        <td class="psv-round-pts">${roundPts}</td>
-      </tr>
+      <div class="psv-round-card" style="animation-delay:${i * 60}ms">
+        <div class="psv-rc-name">${ROUND_LONG[r]}</div>
+        <div class="psv-rc-summary">${parts.join(' · ') || '—'}</div>
+        <div class="psv-rc-pts">${roundPts}${isDouble ? '<span class="psv-2x-badge">2×</span>' : ''}</div>
+      </div>
     `;
   }).filter(Boolean);
 
-  const tableHtml = roundRows.length > 0
-    ? `<table class="psv-table">
-        <thead><tr>
-          <th>Round</th>${labels.map(l => `<th>${l}</th>`).join('')}<th>Pts</th>
-        </tr></thead>
-        <tbody>${roundRows.join('')}</tbody>
-      </table>`
-    : `<div class="psv-empty">No stats recorded yet.</div>`;
+  const roundsHtml = roundCards.length > 0
+    ? roundCards.join('')
+    : '<div class="psv-no-stats">NO STATS RECORDED YET</div>';
 
   document.getElementById('psv-content').innerHTML = `
-    <div class="psv-header">
-      <span class="seed-badge ${isDouble ? 'double' : ''}" style="width:28px;height:28px;font-size:0.75rem;">${p.seed}</span>
-      ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
-      <div>
-        <div class="psv-name">${esc(p.name)}</div>
-        <div class="psv-meta">${esc(p.position)} · ${esc(p.team)}</div>
-        <div class="psv-drafted">Drafted by ${esc(manager?.name || '—')}</div>
+    <div class="psv-modal-header">
+      ${p.eliminated ? '<div class="psv-elim-stamp">ELIMINATED</div>' : ''}
+      <div class="psv-seed-circle ${isDouble ? 'psv-seed-double' : 'psv-seed-normal'}">
+        ${p.seed}${isDouble ? '<span class="psv-seed-2x">2×</span>' : ''}
+      </div>
+      <div class="psv-player-name">${esc(p.name)}</div>
+      <div class="psv-player-meta">${esc(p.team)} · ${esc(p.position)}</div>
+      <div class="psv-drafted-pill">Drafted by ${esc(manager?.name || '—')}</div>
+    </div>
+    <div class="psv-body">
+      ${isDouble ? `<div class="psv-double-banner">⚡ SEED ${p.seed} — ALL STATS COUNT 2×</div>` : ''}
+      <div class="psv-stat-grid">${statGrid}</div>
+      <div class="psv-hero-bar">
+        <div class="psv-hero-label">TOTAL FANTASY PTS</div>
+        <div class="psv-hero-pts" data-target="${totalPts}">0</div>
+        ${isDouble ? `<div class="psv-hero-calc">Base: ${baseScore} pts × 2 = ${totalPts} pts</div>` : ''}
+      </div>
+      <div class="psv-rounds-section">
+        <div class="psv-section-label">ROUND BREAKDOWN</div>
+        <div class="psv-rounds">${roundsHtml}</div>
+      </div>
+      <div class="psv-contrib-section">
+        <div class="psv-contrib-label">${esc(manager?.name || '—')}'s roster: ${Math.round(contribPct)}% from ${esc(p.name)}</div>
+        <div class="psv-contrib-track">
+          <div class="psv-contrib-fill" data-target="${contribPct.toFixed(1)}" style="width:0%"></div>
+        </div>
       </div>
     </div>
-    ${p.eliminated ? `<div class="psv-elim-badge">${elimBadge(p.eliminatedRound)}</div>` : ''}
-    ${isDouble ? `<div class="psv-double-note">2× multiplier applied to all stats</div>` : ''}
-    ${tableHtml}
-    <div class="psv-total">${totalPts}<span>fantasy pts</span></div>
+    <div class="psv-footer">
+      <button class="psv-close-btn" onclick="closePlayerStatsView()">CLOSE</button>
+    </div>
   `;
 
   document.getElementById('player-stats-view').classList.add('open');
+
+  // Animate numbers + progress bar after paint
+  requestAnimationFrame(() => {
+    document.querySelectorAll('#psv-content .psv-stat-val[data-target]').forEach(el => {
+      psvAnimateCount(el, parseFloat(el.dataset.target) || 0, 600);
+    });
+    const heroEl = document.querySelector('#psv-content .psv-hero-pts[data-target]');
+    if (heroEl) psvAnimateCount(heroEl, parseFloat(heroEl.dataset.target) || 0, 700);
+    const fill = document.querySelector('#psv-content .psv-contrib-fill[data-target]');
+    if (fill) setTimeout(() => { fill.style.width = fill.dataset.target + '%'; }, 50);
+  });
+}
+
+function psvAnimateCount(el, target, duration) {
+  if (target === 0) { el.textContent = '0'; return; }
+  const isFloat = target !== Math.floor(target);
+  const start = performance.now();
+  (function step(now) {
+    const t      = Math.min((now - start) / duration, 1);
+    const eased  = 1 - Math.pow(1 - t, 3);
+    const val    = target * eased;
+    el.textContent = isFloat ? round1(val) : Math.round(val);
+    if (t < 1) requestAnimationFrame(step);
+    else el.textContent = isFloat ? target : target;
+  })(start);
 }
 
 function closePlayerStatsView() {

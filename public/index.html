@@ -17,7 +17,7 @@
     <div class="header-inner">
       <div>
         <div class="header-title">Dig Bicken with the Boys</div>
-        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In &nbsp;<span id="version-badge" style="opacity:0.4;font-size:0.7em;font-weight:400;letter-spacing:0.05em">v14</span></div>
+        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In &nbsp;<span id="version-badge" style="opacity:0.4;font-size:0.7em;font-weight:400;letter-spacing:0.05em">v15</span></div>
       </div>
       <div class="header-badge">Rock Chalk!</div>
     </div>
@@ -344,22 +344,9 @@
     </div>
   </div>
 
-  <!-- Player Stats View (read-only) -->
+  <!-- Player Stats View (read-only, dark sports card) -->
   <div id="player-stats-view" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Player Stats</h3>
-        <button class="btn-ghost-danger" onclick="closePlayerStatsView()" title="Close">
-          <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
-            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
-          </svg>
-        </button>
-      </div>
-      <div id="psv-content" class="modal-body"></div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" onclick="closePlayerStatsView()">Close</button>
-      </div>
-    </div>
+    <div id="psv-content" class="psv-modal"></div>
   </div>
 
   <!-- Toast -->
