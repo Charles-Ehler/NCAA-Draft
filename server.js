@@ -99,12 +99,33 @@ function extractElimRound(event) {
   return null;
 }
 
-function teamMatches(playerTeam, espnTeam) {
-  const norm = s => (s || '').toLowerCase().replace(/[^a-z ]/g, '').trim();
-  const a = norm(playerTeam);
-  const b = norm(espnTeam);
-  if (!a || !b) return false;
-  return a === b || b.includes(a) || a.includes(b);
+function teamMatches(playerTeam, espnTeamName) {
+  const a = playerTeam.toLowerCase().trim();
+  const b = espnTeamName.toLowerCase().trim();
+
+  // Exact match always works
+  if (a === b) return true;
+
+  // Safe list — these must ONLY match exactly, never as substring
+  const exactOnly = [
+    'florida', 'michigan', 'iowa', 'kansas', 'arizona',
+    'tennessee', 'kentucky', 'texas', 'georgia', 'alabama',
+    'virginia', 'illinois', 'houston', 'gonzaga', 'indiana',
+    'maryland', 'michigan state', 'ohio state'
+  ];
+  if (exactOnly.includes(a)) {
+    // Only match if ESPN name starts with player team name
+    // AND the next character is a space or end of string
+    const idx = b.indexOf(a);
+    if (idx !== 0) return false;
+    const nextChar = b[a.length];
+    return !nextChar || nextChar === ' ';
+  }
+
+  // For all other teams — word boundary match only
+  // Player team words must all appear in ESPN name in order
+  const playerWords = a.split(' ').filter(w => w.length > 2);
+  return playerWords.every(word => b.includes(word));
 }
 
 async function checkEliminations() {
