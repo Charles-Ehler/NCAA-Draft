@@ -912,8 +912,18 @@ async function applyGameStats(summary, round) {
 }
 
 // Fuzzy name matching (case-insensitive, handles abbreviated first names)
+// Known name corrections: maps a stored typo -> canonical spelling
+// so that if the typo ever reappears it still matches ESPN.
+const NAME_CORRECTIONS = {
+  'mason falsley': 'mason falslev'
+};
+
 function namesMatch(espnName, draftName) {
   const norm = s => (s || '').toLowerCase().replace(/[^a-z ]/g, '').trim();
+  // Apply correction map to draft name before comparing
+  const normDraft = norm(draftName);
+  const corrected = NAME_CORRECTIONS[normDraft] || normDraft;
+  draftName = corrected;
   const a = norm(espnName);
   const b = norm(draftName);
   if (!a || !b) return false;
