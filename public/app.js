@@ -275,7 +275,7 @@ function renderLeaderboard() {
       : m.players.map(p => {
           const pScore   = calcPlayerScore(p);
           const isDouble = p.seed >= 9;
-          const contrib  = m.score > 0 ? Math.round((pScore / m.score) * 100) : 0;
+          const barPct   = m.score > 0 ? Math.min(100, (pScore / m.score) * 100) : 0;
           const ptsClass = pScore === 0 ? 'zero' : '';
           return `
             <div class="lb-player-row"
@@ -286,13 +286,13 @@ function renderLeaderboard() {
               <span class="seed-badge ${isDouble ? 'double' : ''}" style="width:24px;height:24px;font-size:0.68rem;">${p.seed}</span>
               ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
               <div style="flex:1;min-width:0;">
-                <div class="lb-player-name">${esc(p.name)}</div>
-                <div class="lb-player-sub">${esc(p.position)} · ${esc(p.team)}${p.eliminated ? ` · <span style="color:var(--gray-400)">${elimBadge(p.eliminatedRound)}</span>` : ''}</div>
+                <div class="lb-player-name ${p.eliminated ? 'is-out' : ''}">
+                  ${esc(p.name)}${p.eliminated ? ` <span class="lb-out-badge">${elimBadge(p.eliminatedRound)}</span>` : ''}
+                </div>
+                <div class="lb-player-sub">${esc(p.position)} · ${esc(p.team)}</div>
+                <div class="lb-contrib-track"><div class="lb-contrib-fill" style="width:${barPct.toFixed(1)}%"></div></div>
               </div>
-              <div class="lb-player-pts ${ptsClass}">
-                ${pScore !== 0 ? pScore : '—'}
-                ${pScore !== 0 && m.score > 0 ? `<span class="pts-contrib">${contrib}%</span>` : ''}
-              </div>
+              <div class="lb-player-pts ${ptsClass}">${pScore !== 0 ? pScore : '—'}</div>
             </div>
           `;
         }).join('');
@@ -355,7 +355,7 @@ function renderStats() {
         const roundPts  = hasStats ? round1(calcRoundScore(stat, isDouble ? 2 : 1)) : null;
         const totalPts  = calcPlayerScore(p);
         return `
-          <div class="stats-player-item ${hasStats ? 'has-stats' : ''}" onclick="openStatsModal('${p.id}', ${currentRound})">
+          <div class="stats-player-item ${hasStats ? 'has-stats' : ''}" onclick="openPlayerStatsView('${p.id}')">
             <span class="seed-badge ${isDouble ? 'double' : ''}">${p.seed}</span>
             ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
             <div class="stats-player-name-wrap">
@@ -438,6 +438,7 @@ function renderStatus() {
                     <div class="status-player-meta">${esc(p.position)} · ${esc(p.team)}</div>
                   </div>
                   <div class="status-actions">
+                    <button class="btn-edit-stats" onclick="requireAdmin(() => _openStatsModal('${p.id}', currentRound))">Stats</button>
                     ${p.eliminated
                       ? `<span class="out-tag">${elimBadge(p.eliminatedRound)}</span>
                          <button class="btn-restore" onclick="restorePlayer('${p.id}')">Restore</button>`
@@ -992,6 +993,64 @@ function updateLastSyncDisplay() {
 // ─── STATS MODAL ──────────────────────────────────────────
 
 // Public entry point — gated by admin
+// ─── READ-ONLY PLAYER STATS VIEW ─────────────────────────
+
+function openPlayerStatsView(playerId) {
+  const p       = appData.players.find(pl => pl.id === playerId);
+  if (!p) return;
+  const manager  = appData.managers.find(m => m.id === p.managerId);
+  const isDouble = p.seed >= 9;
+  const totalPts = calcPlayerScore(p);
+  const keys     = ['points','rebounds','assists','blocks','steals','turnovers'];
+  const labels   = ['PTS','REB','AST','BLK','STL','TO'];
+
+  const roundRows = [1,2,3,4,5,6].map(r => {
+    const rd   = appData.rounds.find(ro => ro.round === r);
+    const stat = rd?.stats.find(s => s.playerId === playerId);
+    if (!stat) return null;
+    const mult    = isDouble ? 2 : 1;
+    const roundPts = round1(calcRoundScore(stat, mult));
+    return `
+      <tr>
+        <td class="psv-round-name">${ROUND_SHORT[r] || `R${r}`}</td>
+        ${keys.map(k => `<td>${stat[k] !== undefined ? stat[k] : '—'}</td>`).join('')}
+        <td class="psv-round-pts">${roundPts}</td>
+      </tr>
+    `;
+  }).filter(Boolean);
+
+  const tableHtml = roundRows.length > 0
+    ? `<table class="psv-table">
+        <thead><tr>
+          <th>Round</th>${labels.map(l => `<th>${l}</th>`).join('')}<th>Pts</th>
+        </tr></thead>
+        <tbody>${roundRows.join('')}</tbody>
+      </table>`
+    : `<div class="psv-empty">No stats recorded yet.</div>`;
+
+  document.getElementById('psv-content').innerHTML = `
+    <div class="psv-header">
+      <span class="seed-badge ${isDouble ? 'double' : ''}" style="width:28px;height:28px;font-size:0.75rem;">${p.seed}</span>
+      ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
+      <div>
+        <div class="psv-name">${esc(p.name)}</div>
+        <div class="psv-meta">${esc(p.position)} · ${esc(p.team)}</div>
+        <div class="psv-drafted">Drafted by ${esc(manager?.name || '—')}</div>
+      </div>
+    </div>
+    ${p.eliminated ? `<div class="psv-elim-badge">${elimBadge(p.eliminatedRound)}</div>` : ''}
+    ${isDouble ? `<div class="psv-double-note">2× multiplier applied to all stats</div>` : ''}
+    ${tableHtml}
+    <div class="psv-total">${totalPts}<span>fantasy pts</span></div>
+  `;
+
+  document.getElementById('player-stats-view').classList.add('open');
+}
+
+function closePlayerStatsView() {
+  document.getElementById('player-stats-view').classList.remove('open');
+}
+
 function openStatsModal(playerId, round) {
   requireAdmin(() => _openStatsModal(playerId, round));
 }
