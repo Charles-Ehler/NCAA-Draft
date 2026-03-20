@@ -138,14 +138,14 @@ function renderAll() {
 function renderDraft() {
   const grid = document.getElementById('draft-grid');
 
-  // Find leader score for highlighting
-  const scores = appData.managers.map(m => calcManagerScore(m.id));
-  const maxScore = Math.max(...scores, 0);
+  // Sort managers by total fantasy points descending
+  const sorted = [...appData.managers].sort((a, b) => calcManagerScore(b.id) - calcManagerScore(a.id));
+  const maxScore = Math.max(...sorted.map(m => calcManagerScore(m.id)), 0);
 
-  grid.innerHTML = appData.managers.map((manager, cardIdx) => {
+  grid.innerHTML = sorted.map((manager, cardIdx) => {
     const players   = appData.players.filter(p => p.managerId === manager.id);
     const canAdd    = players.length < 5;
-    const score     = scores[cardIdx];
+    const score     = calcManagerScore(manager.id);
     const isLeader  = maxScore > 0 && score === maxScore;
     const slotsLeft = 5 - players.length;
 
