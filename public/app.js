@@ -87,6 +87,12 @@ function calcManagerScore(managerId) {
 
 function round1(n) { return Math.round(n * 10) / 10; }
 
+function ordinal(n) {
+  const s = ['th','st','nd','rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
 // ─── API ──────────────────────────────────────────────────
 async function api(method, path, body) {
   const res = await fetch('/api' + path, {
@@ -450,18 +456,15 @@ function renderPlayers() {
     return { ...p, multiplier, rounds, totalPts, mgrName: mgr?.name || '?' };
   });
 
-  // Sort: active first by pts desc, then eliminated by pts desc
-  scored.sort((a, b) => {
-    if (a.eliminated !== b.eliminated) return a.eliminated ? 1 : -1;
-    return b.totalPts - a.totalPts;
-  });
+  // Sort: purely by total fantasy points descending
+  scored.sort((a, b) => b.totalPts - a.totalPts);
 
   const ROUND_FULL_MAP = { 1:'Round of 64',2:'Round of 32',3:'Sweet 16',4:'Elite 8',5:'Final Four',6:'Championship' };
 
   const cards = scored.map((p, idx) => {
     const rank       = idx + 1;
     const isDouble   = p.multiplier === 2;
-    const rankLabel  = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
+    const rankLabel  = ordinal(rank);
     const rankMedal  = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
 
     const roundRows = p.rounds.map(r => {
