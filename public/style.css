@@ -1558,6 +1558,17 @@ main {
   color: var(--blue);
 }
 
+/* ── SYNC INDICATOR ──────────────────────────────────────── */
+.sync-indicator {
+  color: var(--blue);
+  font-weight: 600;
+  animation: syncPulse 1s ease-in-out infinite alternate;
+}
+@keyframes syncPulse {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+
 /* ── CLEAR STATS LINK ────────────────────────────────────── */
 .clear-stats-link {
   background: none;

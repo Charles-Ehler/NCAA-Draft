@@ -760,6 +760,7 @@ async function autoSyncStats() {
 async function _doSync(silent = false) {
   const btn = document.getElementById('sync-stats-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+  setSyncingState(true);
 
   try {
     if (!silent) showToast('Syncing stats from ESPN…');
@@ -809,6 +810,9 @@ async function _doSync(silent = false) {
     await api('PUT', '/meta', { lastSync: now });
     appData.lastSync = now;
 
+    // Trigger server-side elimination check after stat sync
+    fetch('/api/check-eliminations').catch(() => {});
+
     await loadData(true);
     updateLastSyncDisplay();
 
@@ -820,6 +824,7 @@ async function _doSync(silent = false) {
     else console.warn('Background sync failed:', e);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Sync Stats'; }
+    setSyncingState(false);
   }
 }
 
@@ -928,6 +933,16 @@ function extractRound(event) {
 }
 
 // ─── Last Sync Display ─────────────────────────────────────
+function setSyncingState(syncing) {
+  const el = document.getElementById('last-sync-display');
+  if (!el) return;
+  if (syncing) {
+    el.innerHTML = '<span class="sync-indicator">⟳ Syncing…</span>';
+  } else {
+    updateLastSyncDisplay();
+  }
+}
+
 function updateLastSyncDisplay() {
   const el = document.getElementById('last-sync-display');
   if (!el) return;
@@ -938,9 +953,9 @@ function updateLastSyncDisplay() {
   const now = new Date();
   const diffMin = Math.round((now - d) / 60000);
 
-  if (diffMin < 1)        el.textContent = 'Just synced';
-  else if (diffMin < 60)  el.textContent = `Synced ${diffMin}m ago`;
-  else                    el.textContent = `Synced ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  if (diffMin < 1)        el.textContent = 'Updated just now';
+  else if (diffMin < 60)  el.textContent = `Updated ${diffMin}m ago`;
+  else                    el.textContent = `Updated ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 }
 
 // ─── STATS MODAL ──────────────────────────────────────────

@@ -71,6 +71,102 @@ function espnFetch(url) {
   });
 }
 
+// ── Elimination helpers ─────────────────────────────────────
+
+const ELIM_ROUND_KEYWORDS = [
+  { rx: /round of 64|first round|1st round|first four/i,          num: 1 },
+  { rx: /round of 32|second round|2nd round/i,                    num: 2 },
+  { rx: /sweet 16|sweet sixteen|regional semifinal/i,             num: 3 },
+  { rx: /elite 8|elite eight|regional (final|championship)/i,     num: 4 },
+  { rx: /final four|national semifinal/i,                         num: 5 },
+  { rx: /national championship|championship game/i,               num: 6 }
+];
+
+function isTournamentEventServer(event) {
+  if (event.season?.type === 3 || event.season?.type === '3') return true;
+  const notes = event.competitions?.[0]?.notes || [];
+  const note  = notes.map(n => n.headline || '').join(' ').toLowerCase();
+  const name  = (event.name || event.shortName || '').toLowerCase();
+  return /ncaa|tournament|march madness/.test(note) || /ncaa|tournament/.test(name);
+}
+
+function extractElimRound(event) {
+  const notes = (event.competitions?.[0]?.notes || []).map(n => n.headline || '').join(' ');
+  const text  = notes + ' ' + (event.name || event.shortName || '');
+  for (const { rx, num } of ELIM_ROUND_KEYWORDS) {
+    if (rx.test(text)) return num;
+  }
+  return null;
+}
+
+function teamMatches(playerTeam, espnTeam) {
+  const norm = s => (s || '').toLowerCase().replace(/[^a-z ]/g, '').trim();
+  const a = norm(playerTeam);
+  const b = norm(espnTeam);
+  if (!a || !b) return false;
+  return a === b || b.includes(a) || a.includes(b);
+}
+
+async function checkEliminations() {
+  const today     = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, '');
+
+  const seenIds = new Set();
+  const completedGames = [];
+
+  for (const date of [fmt(today), fmt(yesterday)]) {
+    try {
+      const sb = await espnFetch(
+        `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?limit=200&groups=100&dates=${date}`
+      );
+      for (const event of sb.events || []) {
+        if (seenIds.has(event.id)) continue;
+        if (!event.status?.type?.completed) continue;
+        if (!isTournamentEventServer(event)) continue;
+        seenIds.add(event.id);
+        completedGames.push(event);
+      }
+    } catch (e) {
+      console.warn(`checkEliminations: scoreboard fetch failed for ${date}:`, e.message);
+    }
+  }
+
+  if (completedGames.length === 0) return;
+
+  const data = await getData();
+  let changed = false;
+
+  for (const event of completedGames) {
+    const comp  = event.competitions?.[0];
+    if (!comp) continue;
+
+    const loser = comp.competitors?.find(c => c.winner === false);
+    if (!loser) continue;
+
+    const loserName = loser.team?.displayName || loser.team?.name || '';
+    if (!loserName) continue;
+
+    const round = extractElimRound(event);
+
+    for (const player of data.players) {
+      if (player.eliminated) continue;
+      if (teamMatches(player.team, loserName)) {
+        player.eliminated      = true;
+        player.eliminatedRound = round;
+        changed = true;
+        console.log(`[AUTO-ELIM] ${player.name} (${player.team}) eliminated — ${loserName} lost in round ${round}`);
+      }
+    }
+  }
+
+  if (changed) {
+    await saveData(data);
+    console.log('[AUTO-ELIM] Saved updated eliminations to JSONbin');
+  }
+}
+
 // ── ESPN proxy routes ──────────────────────────────────────
 
 // Tournament bracket (teams + seeds)
@@ -105,6 +201,18 @@ app.get('/api/espn/scoreboard', async (req, res) => {
       `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?limit=200&groups=100${dateParam}`
     );
     res.json(data);
+    // Fire elimination check in background on every scoreboard fetch
+    checkEliminations().catch(e => console.warn('checkEliminations error:', e.message));
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+// Manual / post-sync elimination check
+app.get('/api/check-eliminations', async (req, res) => {
+  try {
+    await checkEliminations();
+    res.json({ success: true });
   } catch (e) {
     res.status(502).json({ error: e.message });
   }
