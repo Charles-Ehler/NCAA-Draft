@@ -94,7 +94,8 @@ function chatEsc(str) {
 }
 
 function chatFormatTime(ts) {
-  const d       = new Date(ts);
+  const d = new Date(ts);
+  if (!ts || isNaN(d.getTime())) return '';
   const now     = new Date();
   const diffMin = Math.round((now - d) / 60000);
   if (diffMin < 1)    return 'just now';

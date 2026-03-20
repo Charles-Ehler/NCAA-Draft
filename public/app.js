@@ -13,6 +13,9 @@ let rosterCache = {};
 const ROUND_FULL  = { 1:'Round of 64', 2:'Round of 32', 3:'Sweet 16', 4:'Elite 8', 5:'Final Four', 6:'Championship' };
 const ROUND_SHORT = { 1:'R64', 2:'R32', 3:'S16', 4:'E8', 5:'F4', 6:'Champ' };
 
+// "Out R64", "Out S16", etc. for elimination badges
+function elimBadge(round) { return 'Out ' + (ROUND_SHORT[round] || (round ? `R${round}` : '?')); }
+
 // Round keywords for ESPN round detection
 const ROUND_KEYWORDS = [
   { rx: /round of 64|first round|1st round|first four/i,               num: 1 },
@@ -163,7 +166,7 @@ function renderDraft() {
       <div class="card draft-card ${isLeader ? 'is-leader' : ''}" style="--i:${cardIdx}">
         <div class="card-header">
           <h3>${esc(manager.name)}<span class="leader-crown">👑</span></h3>
-          <span class="draft-mgr-score">${players.length}/5 · ${score > 0 ? score + 'pts' : '0pts'}</span>
+          <span class="draft-mgr-score">${players.length}/5 · ${score > 0 ? score + ' pts' : '0 pts'}</span>
         </div>
         <div style="padding: 6px 14px 12px;">
           ${players.map((p, i) => playerItemHTML(p, true, i)).join('')}
@@ -211,7 +214,7 @@ function playerItemHTML(p, showDelete = false, animIndex = -1) {
       ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
       <div class="player-info">
         <div class="player-name">${esc(p.name)}</div>
-        <div class="player-meta">${esc(p.position)} · ${esc(p.team)}${p.eliminated ? ` · <span style="color:var(--gray-400)">Out R${p.eliminatedRound || '?'}</span>` : ''}</div>
+        <div class="player-meta">${esc(p.position)} · ${esc(p.team)}${p.eliminated ? ` · <span style="color:var(--gray-400)">${elimBadge(p.eliminatedRound)}</span>` : ''}</div>
         ${pillLine}
       </div>
       <div class="player-score-wrap">
@@ -269,7 +272,7 @@ function renderLeaderboard() {
               ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
               <div style="flex:1;min-width:0;">
                 <div class="lb-player-name">${esc(p.name)}</div>
-                <div class="lb-player-sub">${esc(p.position)} · ${esc(p.team)}${p.eliminated ? ` · <span style="color:var(--gray-400)">Out R${p.eliminatedRound||'?'}</span>` : ''}</div>
+                <div class="lb-player-sub">${esc(p.position)} · ${esc(p.team)}${p.eliminated ? ` · <span style="color:var(--gray-400)">${elimBadge(p.eliminatedRound)}</span>` : ''}</div>
               </div>
               <div class="lb-player-pts ${ptsClass}">
                 ${pScore !== 0 ? pScore : '—'}
@@ -413,7 +416,7 @@ function renderStatus() {
                   </div>
                   <div class="status-actions">
                     ${p.eliminated
-                      ? `<span class="out-tag">Out R${p.eliminatedRound || '?'}</span>
+                      ? `<span class="out-tag">${elimBadge(p.eliminatedRound)}</span>
                          <button class="btn-restore" onclick="restorePlayer('${p.id}')">Restore</button>`
                       : `<span class="text-xs text-green" style="white-space:nowrap"><span class="active-dot"></span>Active</span>
                          <button class="btn-eliminate" onclick="openEliminateModal('${p.id}')">Eliminate</button>`
@@ -470,12 +473,12 @@ function renderPlayers() {
     const roundRows = p.rounds.map(r => {
       const s = r.stat;
       const statLine = [
-        s.points    ? `${s.points} pts`                         : '',
-        s.rebounds  ? `${s.rebounds} reb`                       : '',
-        s.assists   ? `${s.assists} ast`                        : '',
-        s.blocks    ? `${s.blocks} blk`                         : '',
-        s.steals    ? `${s.steals} stl`                         : '',
-        s.turnovers ? `${s.turnovers} to`                       : ''
+        s.points    ? `${s.points} PTS`  : '',
+        s.rebounds  ? `${s.rebounds} REB` : '',
+        s.assists   ? `${s.assists} AST`  : '',
+        s.blocks    ? `${s.blocks} BLK`   : '',
+        s.steals    ? `${s.steals} STL`   : '',
+        s.turnovers ? `${s.turnovers} TO` : ''
       ].filter(Boolean).join(' · ') || '—';
 
       return `
@@ -494,7 +497,7 @@ function renderPlayers() {
           <div class="pl-info">
             <div class="pl-name">${esc(p.name)}
               ${isDouble ? '<span class="badge-2x">2×</span>' : ''}
-              ${p.eliminated ? `<span class="pl-out-badge">Out R${p.eliminatedRound || '?'}</span>` : ''}
+              ${p.eliminated ? `<span class="pl-out-badge">${elimBadge(p.eliminatedRound)}</span>` : ''}
             </div>
             <div class="pl-meta">
               <span class="seed-badge ${isDouble ? 'double' : ''}">${p.seed}</span>
@@ -953,7 +956,9 @@ function updateLastSyncDisplay() {
   if (!ts) { el.textContent = 'Never synced'; return; }
 
   const d   = new Date(ts);
-  const now = new Date();
+  if (isNaN(d.getTime())) { el.textContent = 'Never synced'; return; }
+
+  const now     = new Date();
   const diffMin = Math.round((now - d) / 60000);
 
   if (diffMin < 1)        el.textContent = 'Updated just now';
@@ -1143,7 +1148,7 @@ function showPlayerTooltip(e, playerId) {
     ${isDouble ? '<div class="ptt-double">⚡ 2× Seed Multiplier</div>' : ''}
     <div class="ptt-score">${score !== 0 ? score + ' fantasy pts' : '0 pts so far'}</div>
     ${roundLines ? `<hr class="ptt-divider"><div class="ptt-rounds">${roundLines}</div>` : ''}
-    ${player.eliminated ? `<div class="ptt-elim">❌ Eliminated Round ${player.eliminatedRound || '?'}</div>` : ''}
+    ${player.eliminated ? `<div class="ptt-elim">❌ Eliminated — ${ROUND_FULL[player.eliminatedRound] || 'Round ?'}</div>` : ''}
     <div class="ptt-hint">${'ontouchstart' in window ? 'Tap elsewhere to dismiss' : 'Hover for details'}</div>
   `;
 
