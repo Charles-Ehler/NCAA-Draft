@@ -17,7 +17,7 @@
     <div class="header-inner">
       <div>
         <div class="header-title">Dig Bicken with the Boys</div>
-        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In &nbsp;<span id="version-badge" style="opacity:0.4;font-size:0.7em;font-weight:400;letter-spacing:0.05em">v12</span></div>
+        <div class="header-sub">NCAA Tournament Draft &nbsp;·&nbsp; 5 Managers &nbsp;·&nbsp; $50 Buy-In &nbsp;<span id="version-badge" style="opacity:0.4;font-size:0.7em;font-weight:400;letter-spacing:0.05em">v13</span></div>
       </div>
       <div class="header-badge">Rock Chalk!</div>
     </div>
@@ -361,39 +361,6 @@
     <button class="callout-x" onclick="event.stopPropagation();dismissCallout()" aria-label="Dismiss">✕</button>
   </div>
 
-  <!-- ── CHAT ── -->
-  <button id="chat-bubble" class="chat-bubble" onclick="toggleChat()" title="Talk Shit">
-    💬
-    <span id="chat-badge" class="chat-badge" style="display:none"></span>
-  </button>
-
-  <div id="chat-panel" class="chat-panel" aria-hidden="true">
-    <div class="chat-panel-header">
-      <span class="chat-panel-title">Talk Shit 💀</span>
-      <button class="chat-close-btn" onclick="toggleChat()" title="Close">
-        <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
-          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
-        </svg>
-      </button>
-    </div>
-
-    <div id="chat-messages" class="chat-messages"></div>
-
-    <div id="chat-name-setup" class="chat-name-setup" style="display:none">
-      <p class="chat-name-prompt">What's your name?</p>
-      <div class="chat-name-row">
-        <input id="chat-name-input" class="chat-name-input" type="text" placeholder="Your name…" maxlength="20" autocomplete="off">
-        <button class="chat-name-btn" onclick="setChatName()">Let's go</button>
-      </div>
-    </div>
-
-    <div id="chat-compose" class="chat-compose" style="display:none">
-      <input id="chat-input" class="chat-text-input" type="text" placeholder="Say something…" maxlength="500" autocomplete="off">
-      <button id="chat-send-btn" class="chat-send-btn" onclick="chatSend()">Send</button>
-    </div>
-  </div>
-
   <script src="app.js"></script>
-  <script src="chat.js"></script>
 </body>
 </html>

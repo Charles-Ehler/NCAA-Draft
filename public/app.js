@@ -125,13 +125,27 @@ async function loadData(silent = false) {
 }
 
 // ─── Navigation ───────────────────────────────────────────
+function detectCurrentRound() {
+  // Find the highest round that has any stats entered
+  const rounds = appData.rounds || [];
+  const activeRounds = rounds.filter(r => r.stats && r.stats.length > 0);
+  if (activeRounds.length > 0) {
+    return Math.max(...activeRounds.map(r => r.round));
+  }
+  return 1;
+}
+
 function switchTab(tab) {
   currentTab = tab;
+  localStorage.setItem('dig_bicken_active_tab', tab);
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
-  if (tab === 'stats')   renderStats();
+  if (tab === 'stats') {
+    currentRound = detectCurrentRound();
+    renderStats();
+  }
   if (tab === 'players') renderPlayers();
 }
 
@@ -315,6 +329,11 @@ function renderStats() {
   document.getElementById('round-tabs').innerHTML = [1,2,3,4,5,6].map(r => `
     <button class="round-tab ${r === currentRound ? 'active' : ''}" onclick="selectRound(${r})">${ROUND_FULL[r]}</button>
   `).join('');
+  // Scroll active tab into view after render
+  requestAnimationFrame(() => {
+    const active = document.querySelector('.round-tab.active');
+    if (active) active.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' });
+  });
 
   const roundData = appData.rounds.find(r => r.round === currentRound);
   const container = document.getElementById('stats-player-list');
@@ -365,6 +384,9 @@ function renderStats() {
 function selectRound(r) {
   currentRound = r;
   renderStats();
+  // Scroll selected tab into view
+  const active = document.querySelector('.round-tab.active');
+  if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
 // ─── STATUS TAB ───────────────────────────────────────────
@@ -1637,6 +1659,12 @@ function dismissCallout() {
 
 // ─── INIT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Restore last active tab
+  const savedTab = localStorage.getItem('dig_bicken_active_tab');
+  if (savedTab && ['draft', 'leaderboard', 'players', 'stats', 'status'].includes(savedTab)) {
+    switchTab(savedTab);
+  }
+
   loadData();
 
   // Auto-refresh every 30 seconds; ESPN sync every 10 minutes during tournament hours
