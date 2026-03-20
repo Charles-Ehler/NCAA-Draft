@@ -915,7 +915,8 @@ async function applyGameStats(summary, round) {
 // Known name corrections: maps a stored typo -> canonical spelling
 // so that if the typo ever reappears it still matches ESPN.
 const NAME_CORRECTIONS = {
-  'mason falsley': 'mason falslev'
+  'mason falsley':        'mason falslev',
+  'patrick ngongba iii':  'patrick ngongba ii'
 };
 
 function namesMatch(espnName, draftName) {
