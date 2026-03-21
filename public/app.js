@@ -1708,6 +1708,47 @@ function generateCallouts() {
     }
   }
 
+  // ── TOURNAMENT CONTEXT CALLOUTS (hardcoded R1 storylines) ─
+  // These reference real events from Round 1, 2026 tournament.
+  const aliveCount = activePl.length;
+
+  // Joshua Jefferson injury warning — only show if he has NO R1 stats
+  const jeffersonPlayer = players.find(p => p.name === 'Joshua Jefferson');
+  const jeffersonHasR1  = jeffersonPlayer && rounds.some(r =>
+    r.round === 1 && r.stats.some(s => s.playerId === jeffersonPlayer.id)
+  );
+
+  const ctx = [
+    ['crimson', '🤡', `AJ Dybantsa dropped 35 pts in his first and probably last college game. Andy's pick went out in Round 1. At least he looked good doing it.`],
+    ['crimson', '💀', `Nick Boyd scored 41 pts for Matt then got eliminated by a 12-seed. High Point's Chase Johnston hit his first 2-pointer of the ENTIRE SEASON to beat Wisconsin. Matt felt that personally.`],
+    ['crimson', '😬', `Duke almost lost to a 16-seed. Siena led at halftime 43-32. Kyle's entire team was nearly eliminated in the first round. They survived. Barely.`],
+    ['blue',    '😤', `VCU came back from 19 down to beat North Carolina in overtime. That is the largest first-round comeback in NCAA tournament history. Nobody drafted anyone from VCU. Nobody.`],
+    ['gold',    '🔥', `Aday Mara had 19 pts 7 reb 6 ast AND 3 blocks in Round 1. Brian accidentally assembled a Hall of Fame pick. Don't tell Brian.`],
+    ['gold',    '📊', `Cameron Boozer had 22 pts and 13 reb in Round 1. Kyle's top pick is doing exactly what it says on the tin. Kyle is insufferable about this.`],
+    ['gold',    '🎯', `Jeremy Fears Jr. had 11 assists in one game for Matt. At 1.5× that's 16.5 pts from dimes alone. Matt's floor general is cooking.`],
+    ['crimson', '💸', `AJ Dybantsa set the record for most points by a freshman in their NCAA tournament debut with 35. Then BYU lost. Andy's 2× seed pick scored 70 fantasy pts and went home. March Madness.`],
+    ['crimson', '😬', `Duke needed a second-half comeback to beat a 16-seed. If Siena had held on, Kyle would have lost his entire team in Round 1. Sleep tight, Kyle.`],
+    ['gold',    '🏆', `Michigan beat Howard 101-80. Kyle has 3 Michigan players. Michigan did not need all of them to do that.`],
+    ['gold',    '📈', `Mason Falslev had 22 pts and 7 reb for Charlie in Round 1. The 2× multiplier turned that into serious points. Seed 9 is paying dividends.`],
+    ['gold',    '⚡', `Bennett Stirtz is a 2× seed for Charlie. Iowa upset Clemson in Round 1. Stirtz is still dancing and still doubling every stat.`],
+    ['blue',    '🗑', `Ohio State lost to TCU in Round 1. Bruce Thornton's half-court shot didn't go in. Nobody drafted Bruce Thornton. Probably for the best.`],
+    ['gold',    '👀', `Houston beat Idaho 78-47. Kingston Flemings scored 18 pts leading all Cougars. Charlie's pick is quietly putting up numbers.`],
+    ['blue',    '🤔', `Duke survived. Michigan survived. Iowa State won by 34. The favorites are advancing. Kyle is somewhere feeling very confident. Annoyingly confident.`],
+    ['blue',    '💡', `Virginia beat Wright State and Ugonna Onyenso had 9 blocks in the ACC tournament earlier this month. Brian's rim protector is a menace. 2 pts per block in this league.`],
+    ['crimson', '📉', `BYU lost without Richie Saunders who tore his ACL in February. AJ Dybantsa carried a shorthanded team as far as he could. Andy's pick gave everything. The tournament gave nothing back.`],
+    ['crimson', '🎪', `High Point beat Wisconsin on a layup from a guy who was 0-for-4 on 2-pointers ALL SEASON. Matt lost Nick Boyd because of that shot. March Madness has no soul.`],
+    ['blue',    '🔢', `Round 1 is almost over. 32 teams are still dancing. ${aliveCount} of your 25 players are still alive. The real tournament starts Saturday.`],
+  ];
+
+  // Jefferson injury warning — only if he has no R1 stats
+  if (!jeffersonHasR1) {
+    ctx.push(['crimson', '😭', `Iowa State won 108-74 in Round 1. Joshua Jefferson got hurt early and still had his team cover by 34 points. Kyle's Iowa State pick Jefferson may be banged up. Keep an eye on that.`]);
+  }
+
+  for (const [type, emoji, text] of ctx) {
+    push(type, emoji, text);
+  }
+
   // ── Shuffle ────────────────────────────────────────────────
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
