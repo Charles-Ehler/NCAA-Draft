@@ -1708,42 +1708,52 @@ function generateCallouts() {
     }
   }
 
-  // ── TOURNAMENT CONTEXT CALLOUTS (hardcoded R1 storylines) ─
-  // These reference real events from Round 1, 2026 tournament.
-  const aliveCount = activePl.length;
-
-  // Joshua Jefferson injury warning — only show if he has NO R1 stats
-  const jeffersonPlayer = players.find(p => p.name === 'Joshua Jefferson');
-  const jeffersonHasR1  = jeffersonPlayer && rounds.some(r =>
-    r.round === 1 && r.stats.some(s => s.playerId === jeffersonPlayer.id)
-  );
-
+  // ── TOURNAMENT CONTEXT CALLOUTS (verified R1 storylines) ──
+  // Based on actual Round 1 stats — all numbers confirmed against JSONbin.
   const ctx = [
-    ['crimson', '🤡', `AJ Dybantsa dropped 35 pts in his first and probably last college game. Andy's pick went out in Round 1. At least he looked good doing it.`],
-    ['crimson', '💀', `Nick Boyd scored 41 pts for Matt then got eliminated by a 12-seed. High Point's Chase Johnston hit his first 2-pointer of the ENTIRE SEASON to beat Wisconsin. Matt felt that personally.`],
-    ['crimson', '😬', `Duke almost lost to a 16-seed. Siena led at halftime 43-32. Kyle's entire team was nearly eliminated in the first round. They survived. Barely.`],
-    ['blue',    '😤', `VCU came back from 19 down to beat North Carolina in overtime. That is the largest first-round comeback in NCAA tournament history. Nobody drafted anyone from VCU. Nobody.`],
-    ['gold',    '🔥', `Aday Mara had 19 pts 7 reb 6 ast AND 3 blocks in Round 1. Brian accidentally assembled a Hall of Fame pick. Don't tell Brian.`],
-    ['gold',    '📊', `Cameron Boozer had 22 pts and 13 reb in Round 1. Kyle's top pick is doing exactly what it says on the tin. Kyle is insufferable about this.`],
-    ['gold',    '🎯', `Jeremy Fears Jr. had 11 assists in one game for Matt. At 1.5× that's 16.5 pts from dimes alone. Matt's floor general is cooking.`],
-    ['crimson', '💸', `AJ Dybantsa set the record for most points by a freshman in their NCAA tournament debut with 35. Then BYU lost. Andy's 2× seed pick scored 70 fantasy pts and went home. March Madness.`],
-    ['crimson', '😬', `Duke needed a second-half comeback to beat a 16-seed. If Siena had held on, Kyle would have lost his entire team in Round 1. Sleep tight, Kyle.`],
-    ['gold',    '🏆', `Michigan beat Howard 101-80. Kyle has 3 Michigan players. Michigan did not need all of them to do that.`],
-    ['gold',    '📈', `Mason Falslev had 22 pts and 7 reb for Charlie in Round 1. The 2× multiplier turned that into serious points. Seed 9 is paying dividends.`],
-    ['gold',    '⚡', `Bennett Stirtz is a 2× seed for Charlie. Iowa upset Clemson in Round 1. Stirtz is still dancing and still doubling every stat.`],
-    ['blue',    '🗑', `Ohio State lost to TCU in Round 1. Bruce Thornton's half-court shot didn't go in. Nobody drafted Bruce Thornton. Probably for the best.`],
-    ['gold',    '👀', `Houston beat Idaho 78-47. Kingston Flemings scored 18 pts leading all Cougars. Charlie's pick is quietly putting up numbers.`],
-    ['blue',    '🤔', `Duke survived. Michigan survived. Iowa State won by 34. The favorites are advancing. Kyle is somewhere feeling very confident. Annoyingly confident.`],
-    ['blue',    '💡', `Virginia beat Wright State and Ugonna Onyenso had 9 blocks in the ACC tournament earlier this month. Brian's rim protector is a menace. 2 pts per block in this league.`],
-    ['crimson', '📉', `BYU lost without Richie Saunders who tore his ACL in February. AJ Dybantsa carried a shorthanded team as far as he could. Andy's pick gave everything. The tournament gave nothing back.`],
-    ['crimson', '🎪', `High Point beat Wisconsin on a layup from a guy who was 0-for-4 on 2-pointers ALL SEASON. Matt lost Nick Boyd because of that shot. March Madness has no soul.`],
-    ['blue',    '🔢', `Round 1 is almost over. 32 teams are still dancing. ${aliveCount} of your 25 players are still alive. The real tournament starts Saturday.`],
+    // Mason Falslev — highest single score in the draft
+    ['gold',    '🏆', `Mason Falslev scored 68.8 fantasy pts in Round 1 for Charlie. That is the highest single-player score in this entire draft. Seed 9 pays double. Charlie is winning.`],
+    ['gold',    '⚡', `Falslev had a 34.4 base score. The 2× multiplier turned it into 68.8. That is what Charlie gets for picking a Seed 9. Bold call. Paying off.`],
+    ['blue',    '💡', `Charlie has two 2× seed picks. Falslev scored 68.8. Stirtz scored 56. That is 124.8 pts from two players alone. The multiplier strategy is working.`],
+    // Bennett Stirtz
+    ['gold',    '⚡', `Bennett Stirtz had a 28 base score in Round 1. The 2× multiplier turned that into 56 fantasy pts. Charlie's Seed 9 pick is the second highest scorer in the draft.`],
+    ['blue',    '📊', `Iowa plays Florida in Round 2. Charlie's 2× pick Stirtz vs the defending national champions. If Iowa wins Charlie's lead gets even more dangerous.`],
+    ['gold',    '🔥', `Charlie has 219.2 pts after Round 1. That lead is built on two 2× seed picks producing 124.8 pts combined. Everyone else is chasing.`],
+    // Charlie overall
+    ['gold',    '🥇', `Charlie leads with 219.2 pts after Round 1. Andy is 65 pts back. The gap is real. The tournament is long. But Charlie is sitting very pretty right now.`],
+    ['gold',    '😤', `Charlie has five players still alive and two of them are 2× seeds. No eliminations. 219.2 pts. If anyone catches Charlie from here it will be a miracle.`],
+    // AJ Dybantsa / Andy
+    ['crimson', '💀', `AJ Dybantsa scored 43.5 fantasy pts for Andy in Round 1 then got eliminated. BYU lost to an 11-seed. 43.5 pts. Gone.`],
+    ['crimson', '😬', `Andy's Dybantsa had 35 pts and 10 reb. That calculates to 43.5 fantasy pts. Texas still beat BYU 79-71. Andy watched 43.5 pts walk out the door.`],
+    ['crimson', '🤡', `Dybantsa scored the most pts by a freshman in NCAA Tournament debut history. BYU still lost. Andy's pick made history and then went home. That is March Madness.`],
+    // Nick Boyd / Matt
+    ['crimson', '💀', `Nick Boyd scored 41.0 fantasy pts for Matt then got eliminated by High Point. The winning shot was the first 2-pointer Chase Johnston made all season.`],
+    ['crimson', '😂', `Matt's Nick Boyd had 27 pts, 5 reb, and 6 ast for 41.0 fantasy pts. Wisconsin lost 83-82. Matt scored 41 pts and lost his player on the same night.`],
+    ['crimson', '📉', `Matt has Nick Boyd eliminated and Jeremy Fears Jr at 21.9 pts. He is still in 3rd at 152.2 but the depth took a hit in Round 1.`],
+    // Zuby Ejiofor / Matt
+    ['gold',    '🎯', `Zuby Ejiofor had 4 blocks and 11 reb for Matt in Round 1. Blocks are worth 2× in this league. That stat line calculated to 38.2 fantasy pts. Matt's sleeper pick delivered.`],
+    ['gold',    '📈', `Matt's Ejiofor scored 38.2 pts in Round 1. His Darryn Peterson scored 33.7. Two of Matt's active players are producing. Matt is quietly dangerous at 152.2 pts.`],
+    // Braden Smith / Brian
+    ['gold',    '🎯', `Braden Smith had 8 assists for Brian in Round 1. At 1.5× per assist that is 12 fantasy pts from dimes alone. Smith finished with 39.6 total. Brian's point guard is elite.`],
+    ['blue',    '📊', `Brian is 4th with 138.3 pts but Aday Mara scored 41.4 and Braden Smith scored 39.6. Two players above 39 pts. Brian's floor is higher than his ranking suggests.`],
+    // Aday Mara / Brian
+    ['gold',    '💪', `Aday Mara had 19 pts, 7 reb, 6 ast, and 3 blocks for Brian in Round 1. That calculated to 41.4 fantasy pts. Brian accidentally drafted the most complete player in this draft.`],
+    ['gold',    '🔥', `Brian has Aday Mara at 41.4 pts and Braden Smith at 39.6 pts. Two players combining for 81 pts in one round. Brian is 4th overall but his best players are top tier.`],
+    // Kyle — last place
+    ['crimson', '😬', `Kyle is in last place with 98.1 pts after Round 1. Charlie has 219.2. That is a 121 pt gap. Kyle has Cameron Boozer. Kyle needs Cameron Boozer to go on a historic run.`],
+    ['crimson', '💀', `Patrick Ngongba III did not play for Duke in Round 1. Kyle has a pick with zero stats and zero pts. DNP. Kyle is in 5th. These facts are related.`],
+    ['crimson', '📉', `Kyle's Joshua Jefferson played briefly before getting hurt and scored 3.2 pts. Iowa State won 108-74 without him. Kyle is hoping Jefferson is healthy for Round 2.`],
+    ['blue',    '🏀', `Cameron Boozer scored 39.1 pts for Kyle in Round 1. Morez Johnson Jr scored 36.0. Those are great numbers. Kyle is still in last. The math is not mathing for Kyle.`],
+    // Overall standings
+    ['blue',    '📊', `After Round 1: Charlie 219.2 · Andy 153.8 · Matt 152.2 · Brian 138.3 · Kyle 98.1. Charlie is running away. Andy and Matt are basically tied for 2nd. Kyle is in trouble.`],
+    ['blue',    '💸', `Charlie leads by 65 pts over Andy. In this scoring system 65 pts is roughly 3 good games from one player. It is a lot but not insurmountable. Round 2 starts Saturday.`],
+    ['blue',    '🔢', `Two players have been eliminated: AJ Dybantsa with 43.5 pts and Nick Boyd with 41.0 pts. Both eliminated in Round 1. Andy and Matt each lost a top scorer.`],
+    ['blue',    '📅', `Round 2 is Saturday and Sunday. 16 games. Every manager with players still alive needs a big weekend to close the gap on Charlie. Good luck with that.`],
+    ['gold',    '🎪', `The biggest Round 1 surprise: Charlie in 1st. Charlie has been quietly the smartest drafter in this group and nobody will admit it. The 2× seed strategy is paying off.`],
+    ['blue',    '💡', `The 2× multiplier generated massive value in Round 1. Falslev scored 68.8. Stirtz scored 56. Combined they outscored Kyle's entire roster by 26.7 pts.`],
+    ['crimson', '😤', `Andy is in 2nd at 153.8 but has two players eliminated already. Andy needs his remaining four picks to go deep.`],
+    ['blue',    '🤔', `Matt is in 3rd at 152.2 — just 1.6 pts behind Andy. The tightest race in this draft is for 2nd place. And whoever is 2nd wins $50. Do the math.`],
   ];
-
-  // Jefferson injury warning — only if he has no R1 stats
-  if (!jeffersonHasR1) {
-    ctx.push(['crimson', '😭', `Iowa State won 108-74 in Round 1. Joshua Jefferson got hurt early and still had his team cover by 34 points. Kyle's Iowa State pick Jefferson may be banged up. Keep an eye on that.`]);
-  }
 
   for (const [type, emoji, text] of ctx) {
     push(type, emoji, text);
