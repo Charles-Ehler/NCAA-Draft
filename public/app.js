@@ -1708,51 +1708,54 @@ function generateCallouts() {
     }
   }
 
-  // ── TOURNAMENT CONTEXT CALLOUTS (verified R1 storylines) ──
-  // Based on actual Round 1 stats — all numbers confirmed against JSONbin.
+  // ── TOURNAMENT CONTEXT CALLOUTS (verified through Round 2) ──
+  // Standings: Charlie 385.1 · Matt 281.9 · Brian 272.9 · Andy 253.4 · Kyle 215.9
   const ctx = [
-    // Mason Falslev — highest single score in the draft
-    ['gold',    '🏆', `Mason Falslev scored 68.8 fantasy pts in Round 1 for Charlie. That is the highest single-player score in this entire draft. Seed 9 pays double. Charlie is winning.`],
-    ['gold',    '⚡', `Falslev had a 34.4 base score. The 2× multiplier turned it into 68.8. That is what Charlie gets for picking a Seed 9. Bold call. Paying off.`],
-    ['blue',    '💡', `Charlie has two 2× seed picks. Falslev scored 68.8. Stirtz scored 56. That is 124.8 pts from two players alone. The multiplier strategy is working.`],
-    // Bennett Stirtz
-    ['gold',    '⚡', `Bennett Stirtz had a 28 base score in Round 1. The 2× multiplier turned that into 56 fantasy pts. Charlie's Seed 9 pick is the second highest scorer in the draft.`],
-    ['blue',    '📊', `Iowa plays Florida in Round 2. Charlie's 2× pick Stirtz vs the defending national champions. If Iowa wins Charlie's lead gets even more dangerous.`],
-    ['gold',    '🔥', `Charlie has 219.2 pts after Round 1. That lead is built on two 2× seed picks producing 124.8 pts combined. Everyone else is chasing.`],
-    // Charlie overall
-    ['gold',    '🥇', `Charlie leads with 219.2 pts after Round 1. Andy is 65 pts back. The gap is real. The tournament is long. But Charlie is sitting very pretty right now.`],
-    ['gold',    '😤', `Charlie has five players still alive and two of them are 2× seeds. No eliminations. 219.2 pts. If anyone catches Charlie from here it will be a miracle.`],
-    // AJ Dybantsa / Andy
-    ['crimson', '💀', `AJ Dybantsa scored 43.5 fantasy pts for Andy in Round 1 then got eliminated. BYU lost to an 11-seed. 43.5 pts. Gone.`],
-    ['crimson', '😬', `Andy's Dybantsa had 35 pts and 10 reb. That calculates to 43.5 fantasy pts. Texas still beat BYU 79-71. Andy watched 43.5 pts walk out the door.`],
-    ['crimson', '🤡', `Dybantsa scored the most pts by a freshman in NCAA Tournament debut history. BYU still lost. Andy's pick made history and then went home. That is March Madness.`],
-    // Nick Boyd / Matt
-    ['crimson', '💀', `Nick Boyd scored 41.0 fantasy pts for Matt then got eliminated by High Point. The winning shot was the first 2-pointer Chase Johnston made all season.`],
-    ['crimson', '😂', `Matt's Nick Boyd had 27 pts, 5 reb, and 6 ast for 41.0 fantasy pts. Wisconsin lost 83-82. Matt scored 41 pts and lost his player on the same night.`],
-    ['crimson', '📉', `Matt has Nick Boyd eliminated and Jeremy Fears Jr at 21.9 pts. He is still in 3rd at 152.2 but the depth took a hit in Round 1.`],
-    // Zuby Ejiofor / Matt
-    ['gold',    '🎯', `Zuby Ejiofor had 4 blocks and 11 reb for Matt in Round 1. Blocks are worth 2× in this league. That stat line calculated to 38.2 fantasy pts. Matt's sleeper pick delivered.`],
-    ['gold',    '📈', `Matt's Ejiofor scored 38.2 pts in Round 1. His Darryn Peterson scored 33.7. Two of Matt's active players are producing. Matt is quietly dangerous at 152.2 pts.`],
-    // Braden Smith / Brian
-    ['gold',    '🎯', `Braden Smith had 8 assists for Brian in Round 1. At 1.5× per assist that is 12 fantasy pts from dimes alone. Smith finished with 39.6 total. Brian's point guard is elite.`],
-    ['blue',    '📊', `Brian is 4th with 138.3 pts but Aday Mara scored 41.4 and Braden Smith scored 39.6. Two players above 39 pts. Brian's floor is higher than his ranking suggests.`],
-    // Aday Mara / Brian
-    ['gold',    '💪', `Aday Mara had 19 pts, 7 reb, 6 ast, and 3 blocks for Brian in Round 1. That calculated to 41.4 fantasy pts. Brian accidentally drafted the most complete player in this draft.`],
-    ['gold',    '🔥', `Brian has Aday Mara at 41.4 pts and Braden Smith at 39.6 pts. Two players combining for 81 pts in one round. Brian is 4th overall but his best players are top tier.`],
-    // Kyle — last place
-    ['crimson', '😬', `Kyle is in last place with 98.1 pts after Round 1. Charlie has 219.2. That is a 121 pt gap. Kyle has Cameron Boozer. Kyle needs Cameron Boozer to go on a historic run.`],
-    ['crimson', '💀', `Patrick Ngongba III did not play for Duke in Round 1. Kyle has a pick with zero stats and zero pts. DNP. Kyle is in 5th. These facts are related.`],
-    ['crimson', '📉', `Kyle's Joshua Jefferson played briefly before getting hurt and scored 3.2 pts. Iowa State won 108-74 without him. Kyle is hoping Jefferson is healthy for Round 2.`],
-    ['blue',    '🏀', `Cameron Boozer scored 39.1 pts for Kyle in Round 1. Morez Johnson Jr scored 36.0. Those are great numbers. Kyle is still in last. The math is not mathing for Kyle.`],
-    // Overall standings
-    ['blue',    '📊', `After Round 1: Charlie 219.2 · Andy 153.8 · Matt 152.2 · Brian 138.3 · Kyle 98.1. Charlie is running away. Andy and Matt are basically tied for 2nd. Kyle is in trouble.`],
-    ['blue',    '💸', `Charlie leads by 65 pts over Andy. In this scoring system 65 pts is roughly 3 good games from one player. It is a lot but not insurmountable. Round 2 starts Saturday.`],
-    ['blue',    '🔢', `Two players have been eliminated: AJ Dybantsa with 43.5 pts and Nick Boyd with 41.0 pts. Both eliminated in Round 1. Andy and Matt each lost a top scorer.`],
-    ['blue',    '📅', `Round 2 is Saturday and Sunday. 16 games. Every manager with players still alive needs a big weekend to close the gap on Charlie. Good luck with that.`],
-    ['gold',    '🎪', `The biggest Round 1 surprise: Charlie in 1st. Charlie has been quietly the smartest drafter in this group and nobody will admit it. The 2× seed strategy is paying off.`],
-    ['blue',    '💡', `The 2× multiplier generated massive value in Round 1. Falslev scored 68.8. Stirtz scored 56. Combined they outscored Kyle's entire roster by 26.7 pts.`],
-    ['crimson', '😤', `Andy is in 2nd at 153.8 but has two players eliminated already. Andy needs his remaining four picks to go deep.`],
-    ['blue',    '🤔', `Matt is in 3rd at 152.2 — just 1.6 pts behind Andy. The tightest race in this draft is for 2nd place. And whoever is 2nd wins $50. Do the math.`],
+    // ── Charlie — commanding lead, half his roster gone ──
+    ['gold',    '🏆', `Charlie leads with 385.1 pts. He lost Condon, Chinyelu, AND Falslev all in Round 2. Three players eliminated in one weekend. Still leads by 103 pts. Absolutely disgusting.`],
+    ['gold',    '😤', `Charlie has 2 players left: Stirtz and Flemings. That is it. His entire $50 lead rests on two dudes. And he is STILL winning. Everyone else needs to have a word with themselves.`],
+    ['gold',    '🎪', `Charlie's strategy: draft 2× seed players, let them score 113 pts each, watch them get eliminated, and still lead by 100 pts. Worked perfectly. Do not try this at home.`],
+    ['gold',    '💡', `Charlie has 2 active players. Andy has 4. Kyle has 5. Kyle is losing to a two-man team. Kyle is losing to a two-man team. Kyle is losing to a two-man team.`],
+    ['gold',    '🔥', `Bennett Stirtz: 56 pts in R1, 57 pts in R2. Charlie's last 2× seed is the most consistent scorer in this entire draft. Iowa is in the Sweet 16. The money is printing.`],
+    // ── Falslev — the GOAT of this draft ──
+    ['gold',    '⚡', `Mason Falslev scored 113 pts across two rounds for Charlie then got eliminated. 68.8 in R1. 44.2 in R2. Gone in the Round of 32. The greatest career in Dig Bicken history.`],
+    ['blue',    '📊', `Falslev's 68.8 pts in Round 1 remains the highest single-round score in this draft. He followed it with 44.2 in Round 2. Then got eliminated. Charlie got everything out of that pick.`],
+    ['gold',    '💸', `The 2× multiplier made Falslev worth 113 pts. Without the multiplier that is 56.5 pts. Charlie turned a Seed 9 into the most valuable pick in this draft. Draft smart, not safe.`],
+    // ── Stirtz still alive ──
+    ['gold',    '🏀', `Stirtz has scored 56 and 57 pts in back-to-back rounds. That is not a hot streak. That is consistency. Iowa is in the Sweet 16. Charlie is not letting go of that trophy.`],
+    ['gold',    '🎯', `Iowa beat Florida in Round 2. Charlie's Stirtz scored 57 pts. The defending national champions are out. Charlie's lead just got more dangerous. Again.`],
+    // ── Tamin Lipsey explosion ──
+    ['blue',    '🚀', `Tamin Lipsey scored 13.4 pts in Round 1 and 51.6 pts in Round 2. That 51.6 is the highest single-player score in Round 2. Brian's sleeper showed up fashionably late.`],
+    ['blue',    '🔥', `Brian's Lipsey went from the second-worst R1 scorer on his team to the best R2 scorer in the entire draft. If Brian had known this he would have drafted Lipsey first. No one knew.`],
+    ['blue',    '📈', `Brian has Lipsey at 65.0 pts, Mara at 79.9 pts, and Smith at 43.5 pts — all still alive. Three active players with real numbers. Brian is quietly the most dangerous man in this field.`],
+    // ── Braden Smith disappearing act ──
+    ['crimson', '📉', `Braden Smith scored 39.6 pts in Round 1. Then scored 3.9 pts in Round 2. That is a 90% decline between rounds. Purdue survived. Smith did not show up. Brian is concerned.`],
+    ['crimson', '😬', `Smith had 8 assists in R1. Smith had basically nothing in R2. Purdue runs through Smith. If Smith is quiet, Brian is quiet. Purdue is in the Sweet 16 and Brian needs him to wake up.`],
+    // ── Aday Mara — Brian's anchor ──
+    ['blue',    '💪', `Aday Mara has scored 79.9 pts over two rounds for Brian. 41.4 in R1. 38.5 in R2. Consistent, complete, and still alive. Brian accidentally drafted the best all-around player in this draft.`],
+    // ── Brian overall ──
+    ['blue',    '🤔', `Brian is 3rd at 272.9, just 9 pts behind Matt. Three active players. Lipsey exploding. Mara steady. If Smith wakes up Brian could make a real run at second place — and fifty bucks.`],
+    // ── Matt — two players left ──
+    ['crimson', '📉', `Matt lost Bidunga AND Peterson in Round 2. Boyd was gone in R1. Three of his five picks eliminated. Matt and Charlie both have 2 active players. Charlie is up 103 pts. Different vibes.`],
+    ['gold',    '🎯', `Zuby Ejiofor has scored 75.0 pts in two rounds for Matt. 38.2 in R1. 36.8 in R2. That is incredible consistency from a Seed 2. Matt's best pick is carrying the whole thing.`],
+    ['blue',    '📊', `Matt is in 2nd at 281.9 and leads Brian by 9 pts. Matt has Ejiofor and Fears Jr left. Brian has Lipsey, Mara, and Smith. This race is not over. It is not even close to over.`],
+    ['crimson', '😂', `Matt lost three players but is still in 2nd. That says more about this draft than anything else. Imagine being eliminated twice and still being in the money. Matt is right there.`],
+    // ── Andy — most players, 4th place ──
+    ['crimson', '🤡', `Andy has 4 players alive and is still in 4th. Kyle has 5 alive and is in 5th. Quantity of survivors is officially not the stat that matters in this league.`],
+    ['crimson', '💀', `None of Andy's players have scored 50 pts in a single round. Not one. The ceiling on his entire roster is suspiciously low. Dybantsa was his shot and BYU blew it.`],
+    ['blue',    '📊', `Momcilovic (60.3), Burries (55.8), Bradley (44.2), Evans (49.6). Andy's four survivors are fine. Fine does not win this. Fine is how you lose $50 to Charlie.`],
+    ['crimson', '😤', `Andy is 131 pts behind Charlie. At current scoring pace his four alive players would need to outproduce Charlie's two by about 40 pts per round just to close the gap. Sweet 16 is three rounds from now.`],
+    // ── Kyle — five alive, dead last ──
+    ['crimson', '💀', `Kyle has 5 players alive. Kyle is in last place. Kyle is 169 pts behind Charlie. Kyle is winning the wrong competition entirely.`],
+    ['crimson', '🤡', `Kyle has more active players than anyone in this draft and less pts than anyone in this draft. This is technically impressive. Impressive in a car-crash kind of way.`],
+    ['crimson', '📉', `Patrick Ngongba II finally played in Round 2 and scored 12.8 pts for Kyle. Kyle waited two full rounds for 12.8 pts. Joshua Jefferson has 3.2 pts total and has not played since Round 1.`],
+    ['blue',    '🏀', `Boozer has 80.3 pts. Johnson Jr has 62.6. Lendeborg has 57.0. Those are actually good numbers. Kyle is in last place because of a DNP and an injured player dragging the average down.`],
+    ['crimson', '😬', `Kyle needs to outscore Charlie by 170 pts with five players to win this. Charlie has Stirtz, who scores 56 pts a round. Kyle's math is not mathing and it has not mathed since Round 1.`],
+    // ── Overall standings ──
+    ['blue',    '📊', `After Round 2: Charlie 385.1 · Matt 281.9 · Brian 272.9 · Andy 253.4 · Kyle 215.9. The gap between 2nd and 5th is 66 pts. The gap between Charlie and everyone is 103. He is on another planet.`],
+    ['blue',    '💸', `Second place wins $50. Matt leads Brian by 9 pts. Andy is 28 behind Brian. Those three are genuinely fighting for real money. Meanwhile Charlie is already spending his.`],
+    ['blue',    '🔢', `Nine players eliminated so far. Charlie lost three in Round 2. Matt lost two. Brian lost two. Andy and Matt each lost one in Round 1. Charlie shed half his roster and still leads by 103 pts.`],
+    ['gold',    '🎪', `The 2× seed multiplier is the story of this draft. Stirtz has 113 pts. Falslev had 113 pts before elimination. Two players. Same score. One still alive. Charlie planned this.`],
   ];
 
   for (const [type, emoji, text] of ctx) {
