@@ -129,15 +129,18 @@ function teamMatches(playerTeam, espnTeamName) {
 }
 
 async function checkEliminations() {
-  const today     = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
+  const today = new Date();
   const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, '');
+  const dates = Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    return fmt(d);
+  });
 
   const seenIds = new Set();
   const completedGames = [];
 
-  for (const date of [fmt(today), fmt(yesterday)]) {
+  for (const date of dates) {
     try {
       const sb = await espnFetch(
         `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?limit=200&groups=100&dates=${date}`

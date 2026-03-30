@@ -1708,52 +1708,51 @@ function generateCallouts() {
     }
   }
 
-  // ── TOURNAMENT CONTEXT CALLOUTS (verified through Elite 8) ──
-  // Standings: Charlie 526.3 · Brian 398.3 · Andy 394.4 · Matt 350.6 · Kyle 333.3
+  // ── TOURNAMENT CONTEXT CALLOUTS (verified through Elite 8 / Final Four) ──
+  // Standings: Charlie 526.3 (done) · Kyle 461.8 · Brian 416.1 · Andy 404.4 · Matt 350.6 (done)
+  // Active: Kyle — Lendeborg (154.3) + Johnson Jr (103.7) [Michigan]
+  //         Brian — Mara (119.7) [Michigan]
+  //         Andy  — Burries (112) + Bradley (90.7) [Arizona]
   const ctx = [
-    // ── Charlie — leads with zero players left ──
-    ['gold',    '🏆', `Charlie is in first place with 526.3 pts and zero active players. He won the draft by getting eliminated from it. This is not how it is supposed to work and yet here we are.`],
-    ['gold',    '🪑', `Charlie is watching the rest of the tournament from a lawn chair. All five of his players are gone. He is 128 pts ahead of everyone. He is untouchable. He is also irrelevant. Both things are true.`],
-    ['gold',    '🎪', `Charlie drafted two Seed 9 players, watched them rack up 343 combined pts with the 2× multiplier, watched them both get eliminated, and is still winning by 128 pts. Incredible. Infuriating.`],
-    ['gold',    '😤', `Charlie's entire roster has been eliminated. His lead is 128 pts. For context, the gap between 2nd and 5th place is only 65 pts. Charlie is not in a different tier. He is in a different sport.`],
-    ['gold',    '💸', `Charlie is playing a game of "can anyone catch me before the season ends." So far: no. His score is locked in at 526.3. Everyone else is still trying to get there.`],
-    ['gold',    '🔒', `With all players eliminated, Charlie's final score is 526.3. That number will not change. It will just sit there, mocking everyone, until the last buzzer sounds.`],
-    // ── Bennett Stirtz — the greatest pick in draft history ──
-    ['gold',    '⚡', `Bennett Stirtz scored 56, 57, 56.8, and 60.2 pts across four rounds. That is 230 pts total. He is a Seed 9 with a 2× multiplier and he was the most consistent scorer in this entire draft. Charlie knew.`],
-    ['gold',    '🏀', `Stirtz went to the Elite 8 for Charlie before getting eliminated. 230 pts. With the 2× multiplier removed that would be 115 pts. Charlie got 115 pts of bonus scoring just from picking a Seed 9. Think about that.`],
-    ['gold',    '🧠', `The pick that won this draft: Bennett Stirtz, Seed 9, Iowa. Scored 230 pts. Got eliminated in the Elite 8. Charlie did not draft a player. He drafted a multiplier that happened to be excellent at basketball.`],
-    // ── Mason Falslev — the legend ──
-    ['gold',    '👻', `Mason Falslev is gone but his 113 pts live on. 68.8 in R1. 44.2 in R2. Eliminated in the Round of 32. The greatest two-round career in Dig Bicken history. A comet. A beautiful, double-multiplied comet.`],
-    ['blue',    '📊', `Falslev's R1 score of 68.8 pts is still the highest single-round score by any player in this draft. He did it with 22 points, 7 rebounds, 4 assists, and a Seed 9 multiplier. Never forget.`],
-    // ── Kyle — all five alive, dead last ──
-    ['crimson', '💀', `Kyle has five active players remaining. Kyle is in last place. Kyle is 193 pts behind Charlie. Kyle is not losing this draft because of bad luck. Kyle is losing this draft on purpose, apparently.`],
-    ['crimson', '🤡', `Kyle's roster is the participation trophy of this draft. Everyone is alive. No one is winning. Five Seed 1 players walking around collecting modest stat lines while Charlie cashes out.`],
-    ['crimson', '📉', `Joshua Jefferson has 3.2 fantasy pts in this entire tournament. He played one game. In Round 1. Kyle has been carrying a warm body on his roster for weeks. Jefferson's contribution: 3.2 pts. A rounding error.`],
-    ['crimson', '😂', `Patrick Ngongba II has 19.7 pts across two rounds for Kyle. That is 19.7 pts. In the time it took Ngongba to score 19.7 pts, Stirtz scored 230. Kyle's problem is not bad luck. Kyle's problem is math.`],
-    ['crimson', '😬', `Kyle's best player is Cameron Boozer at 117.8 pts. That is a great score. Kyle is still in last. Boozer, Lendeborg, Johnson, Ngongba, and Jefferson combined for 333.3 pts. Charlie's two 2× seeds alone scored 343. Brutal.`],
-    ['crimson', '🏳️', `Kyle needs to outscore everyone by a combined 193 pts just to tie Charlie. Kyle has five alive players. Each of them would need to score about 40 more pts just to get Kyle out of last. The math is not there, Kyle.`],
-    // ── Andy — 4 alive, chasing Brian ──
-    ['blue',    '📈', `Andy is 3rd with 394.4 pts and four players still alive. He trails Brian by just 3.9 pts. That is the closest race in this draft. Both of them are chasing a ghost named Charlie.`],
-    ['crimson', '🤔', `Andy has four active players and is in 3rd. If any two of them have big games, Andy jumps Brian and is in a real fight for 2nd. The problem is AJ Dybantsa — his best player — is already gone.`],
-    ['crimson', '💀', `AJ Dybantsa scored 43.5 pts in Round 1 and then got eliminated. That was Andy's highest-ceiling player. Gone after one game. The dream died in Round 1 and Andy has been scrapping ever since.`],
-    ['blue',    '💪', `Andy's four survivors — Burries (112), Bradley (90.7), Evans (78.4), Momcilovic (69.8) — are putting up numbers. None of them are spectacular. Together they are dangerous. Andy is not dead yet.`],
-    // ── Brian — 2 alive, holding 2nd ──
-    ['blue',    '🔥', `Brian is in 2nd with 398.3 pts and two active players: Aday Mara (101.9) and Tamin Lipsey (95.5). Both are alive. Both are producing. Brian's lead over Andy is 3.9 pts. He is one bad game from losing it.`],
-    ['blue',    '🚀', `Tamin Lipsey scored 13.4 in R1, then 51.6 in R2, then 30.5 in the Sweet 16. He is Brian's engine. When Lipsey goes off, Brian goes up. When Lipsey goes quiet, Brian starts sweating.`],
-    ['blue',    '🤯', `Brian's Braden Smith scored 116.4 pts and reached the Elite 8 before being eliminated. That is the best run by any eliminated player in this draft other than Stirtz and Falslev. Brian got full value.`],
-    ['blue',    '😤', `Brian has two players left and a 3.9-pt lead on Andy. Two players vs four. Mara and Lipsey need to keep scoring or Andy swallows Brian whole. It is tense. It is close. It is for $50.`],
-    // ── Matt — 2 alive, fighting for top 3 ──
-    ['blue',    '📊', `Matt is 4th with 350.6 pts. He has Zuby Ejiofor (114.6, still alive) and Jeremy Fears Jr (87.6, still alive). Two players. Consistent players. Matt is 44 pts from 3rd. Ejiofor is his guy.`],
-    ['gold',    '💎', `Zuby Ejiofor has been the most consistent non-multiplier scorer in this draft. 38.2 in R1. 36.8 in R2. 39.6 in the Sweet 16. Three rounds, almost identical output every time. Matt found a machine.`],
-    ['crimson', '😬', `Matt lost Nick Boyd in R1, then Bidunga and Peterson in R2. Three picks gone before the Sweet 16. He is 4th with two players. He needs Brian and Andy to collapse. It could happen. Probably will not.`],
-    ['crimson', '😂', `Jeremy Fears Jr dropped 16 assists in a single game for Matt. 16 assists. That is a video game number. That game scored 36.6 pts. Nobody in this draft said "I am taking the assist machine from Michigan State." Matt did. Somehow.`],
-    // ── Overall standings and race ──
-    ['blue',    '📊', `Current standings: Charlie 526.3 (done) · Brian 398.3 · Andy 394.4 · Matt 350.6 · Kyle 333.3. The gap between 2nd and 5th is 65 pts. Three rounds left for four guys fighting over second place.`],
-    ['blue',    '💸', `Second place is worth $50. Brian leads Andy by 3.9 pts. Andy leads Matt by 43.8 pts. Matt leads Kyle by 17.3 pts. Only the Brian vs Andy gap is actually close. Everyone else needs a comeback.`],
-    ['gold',    '🎯', `The 2× multiplier decided this draft. Stirtz and Falslev combined for 343 pts under the multiplier. Without it they score 171.5. That 171.5 bonus is Charlie's entire margin of victory. One rule changed everything.`],
-    ['blue',    '🔢', `Fifteen players eliminated. Ten still alive. Charlie has zero. Kyle has five. The gap between them is 193 pts. Having players left means nothing if those players do not produce. Kyle is proof.`],
-    ['gold',    '🎪', `Final Four is coming. Charlie has no one to root for but himself. Everyone else is hoping their guys go on a run. Kyle is hoping five mediocre Seed 1s suddenly become elite. It is a lot to ask.`],
-    ['crimson', '🤝', `Brian vs Andy for second place. 3.9 pts. That is two rebounds. That is one assist. That is a rounding difference on a single stat line. This race ends on a box score somewhere and no one knows whose.`],
+    // ── Charlie — leads with nobody left ──
+    ['gold',    '🏆', `Charlie has 526.3 pts, zero active players, and a 64.5-pt lead on 2nd place. He is completely eliminated. He is absolutely winning. This draft rewarded one man for getting knocked out early and often.`],
+    ['gold',    '🪑', `Charlie is sitting at home watching the Final Four with nothing at stake. His score is frozen at 526.3. His players are gone. His trophy is already on the shelf. Must be nice, Charlie. Must be very nice.`],
+    ['gold',    '😤', `Charlie's lead is 64.5 pts. The gap between 2nd and 5th is only 111 pts. The man with zero players left is still running away with this thing. Everyone else is playing for second.`],
+    ['gold',    '🔒', `526.3 pts. Locked in. Done. Final. Charlie cannot lose points and cannot gain points. He just has to sit back and hope nobody goes absolutely nuclear in the Final Four. Kyle is trying.`],
+    ['gold',    '🎪', `Charlie drafted two Seed 9 players, collected 343 pts off the 2× multiplier, got eliminated from the tournament, and is still winning by 64.5 pts. Most efficient disaster in fantasy draft history.`],
+    // ── Stirtz — all-time great pick ──
+    ['gold',    '⚡', `Bennett Stirtz: 56, 57, 56.8, 60.2 pts across four rounds. 230 pts total. Seed 9. 2× multiplier. Most consistent scorer in this draft by a mile. Charlie did not deserve that pick and he knows it.`],
+    ['gold',    '🧠', `The pick that won this draft: Bennett Stirtz, Seed 9, Iowa. Four rounds. 230 pts. Eliminated in the Elite 8. Charlie did not draft a player. He drafted a cheat code that wore a jersey.`],
+    ['gold',    '👻', `Falslev: 113 pts, gone in R2. Stirtz: 230 pts, gone in the Elite 8. Charlie's two picks combined for 343 pts. Both eliminated. Still winning. Whoever drafted the 2× seeds basically already won.`],
+    // ── Kyle — jumped to 2nd, Michigan in Final Four ──
+    ['blue',    '📈', `Kyle is in 2nd place with 461.8 pts. That is not a joke. Kyle, who was in last place for most of this draft, is now 2nd because Lendeborg and Johnson Jr both play for Michigan and Michigan is in the Final Four.`],
+    ['blue',    '🚀', `Yaxel Lendeborg has scored 154.3 pts for Kyle across four rounds. That is the second-highest total in the draft. Kyle spent weeks getting roasted for his roster. Lendeborg has the last laugh.`],
+    ['blue',    '🤯', `Kyle needs 64.6 pts across two games to tie Charlie. Michigan plays UConn in the Final Four. If Lendeborg and Johnson Jr go off, Kyle could actually catch the guy with no players. The audacity.`],
+    ['crimson', '💀', `Joshua Jefferson has 3.2 pts in this entire tournament. He played one game. In Round 1. Kyle carried him for weeks, got roasted for it, and is somehow in 2nd place anyway. Jefferson contributed nothing. Michigan contributed everything.`],
+    ['crimson', '😂', `Cameron Boozer scored 160.4 pts for Kyle and got eliminated. Patrick Ngongba had 40.2 pts. Joshua Jefferson had 3.2 pts. Kyle's roster ranged from "elite" to "did this person even play" and he is in 2nd. Incredible.`],
+    ['blue',    '💰', `Kyle is 64.5 pts behind Charlie with Michigan in the Final Four. Lendeborg averaged 47 pts per round in the Sweet 16 and Elite 8. Two more big games and this is a legitimate race. Kyle is very much alive.`],
+    // ── Brian — 3rd, one player left ──
+    ['blue',    '🔥', `Brian is 3rd with 416.1 pts and one active player: Aday Mara (119.7 pts, Michigan). Mara is in the Final Four. Brian is hanging on by one very productive big man.`],
+    ['blue',    '💪', `Aday Mara: 41.4 in R1, 38.5 in R2, 22 in the Sweet 16, 17.8 in the Elite 8. Still alive. Still contributing. Brian drafted a four-round workhorse and is clinging to 3rd place with him.`],
+    ['blue',    '🤔', `Brian trails Kyle by 45.7 pts with one player to Kyle's two. Both teams are Michigan. Brian needs Mara to outscore Lendeborg and Johnson Jr combined. That is not happening. But 3rd place money is still money.`],
+    ['blue',    '🤯', `Brian's Braden Smith scored 116.4 pts across four rounds and reached the Elite 8 before being knocked out. That is the best eliminated-player run in this draft outside of Stirtz and Falslev. Brian squeezed every point out of that pick.`],
+    // ── Andy — 4th, Arizona in Final Four ──
+    ['blue',    '🏀', `Andy is 4th with 404.4 pts and two players alive: Brayden Burries (112 pts) and Jalen Bradley (90.7 pts). Both play for Arizona. Arizona is in the Final Four. Andy is not done yet.`],
+    ['crimson', '😬', `Andy trails Brian by 11.7 pts. He has two players to Brian's one. If Burries and Bradley have a good Final Four game, Andy takes 3rd. If they go quiet, Andy stays 4th. Arizona vs Michigan State could decide $50.`],
+    ['crimson', '💀', `AJ Dybantsa scored 43.5 pts in Round 1 and then got immediately eliminated. That was Andy's nuclear option. It detonated in R1. Andy has been playing with conventional weapons ever since.`],
+    ['blue',    '🎯', `Burries: 27, 28.8, 28, 28.2 pts per round. Four rounds of almost identical production. Andy's most reliable player has been a metronome. Not flashy. Not dominant. Just quietly there every single game.`],
+    // ── Matt — done, nowhere to go ──
+    ['crimson', '😔', `Matt is in last with 350.6 pts and zero active players. He is fully eliminated. He trails Andy by 54 pts with nothing left to score. Matt's draft ended when Michigan State lost to UConn. That hurt.`],
+    ['gold',    '💎', `Zuby Ejiofor scored 38.2, 36.8, and 39.6 pts in three consecutive rounds for Matt. The most consistent scorer in the draft not named Stirtz. Eliminated in the Sweet 16. Matt got everything out of that pick.`],
+    ['crimson', '😂', `Matt lost Nick Boyd in R1, Peterson and Bidunga in R2. Three picks gone before the Sweet 16. His survivors — Ejiofor and Fears — both went deep and still got eliminated. Matt played a clean hand and still lost to everyone. Rough.`],
+    ['crimson', '🎭', `Jeremy Fears Jr dropped 16 assists in a single Round of 32 game for Matt. Sixteen. The most unhinged assist total in this draft. Michigan State still lost to UConn. Fears had 36.6 pts on the night. Gone anyway.`],
+    // ── Final Four picture ──
+    ['blue',    '📊', `Final Four breakdown by draft interest: Michigan — Kyle (Lendeborg + Johnson Jr) + Brian (Mara). Arizona — Andy (Burries + Bradley). UConn — nobody. Illinois — nobody. Three managers have skin in this game.`],
+    ['blue',    '🔢', `Current standings: Charlie 526.3 (frozen) · Kyle 461.8 · Brian 416.1 · Andy 404.4 · Matt 350.6 (frozen). Charlie leads by 64.5. Kyle could catch him. Brian and Andy are fighting for 3rd.`],
+    ['blue',    '💸', `Money is on the line. Kyle needs a Michigan explosion to catch Charlie. Brian and Andy are 11.7 pts apart fighting for 3rd. Matt and Charlie are done. Four players are deciding the final standings.`],
+    ['gold',    '🎯', `The 2× multiplier decided this entire draft. Stirtz and Falslev combined for 343 pts. Without the multiplier that is 171.5. Charlie's margin of victory is literally just the bonus from picking overlooked Seed 9 players.`],
+    ['crimson', '🤝', `Michigan is carrying three managers into the Final Four. Kyle has two players there. Brian has one. The most invested team in this draft is wearing maize and blue. Go Blue, apparently. For the money.`],
+    ['gold',    '🎪', `Charlie drafted for the multiplier. Kyle drafted for quantity. Brian drafted for ceiling. Andy drafted for depth. Matt drafted carefully and lost anyway. The tournament does not care about your strategy.`],
   ];
 
   for (const [type, emoji, text] of ctx) {
