@@ -111,13 +111,15 @@ function teamMatches(playerTeam, espnTeamName) {
     'florida', 'michigan', 'iowa', 'kansas', 'arizona',
     'tennessee', 'kentucky', 'texas', 'georgia', 'alabama',
     'virginia', 'illinois', 'houston', 'gonzaga', 'indiana',
-    'maryland', 'michigan state', 'ohio state'
+    'maryland', 'michigan state', 'iowa state', 'kansas state',
+    'ohio state', 'florida state', 'illinois state', 'tennessee state'
   ];
   if (exactOnly.includes(a)) {
-    // Only match if ESPN name starts with player team name
-    // AND the next character is a space or end of string
-    const idx = b.indexOf(a);
-    if (idx !== 0) return false;
+    // Don't match if a more-specific exactOnly entry also fits b
+    // e.g. "michigan" must not match "michigan state spartans"
+    const moreSpecific = exactOnly.filter(e => e !== a && e.startsWith(a + ' ') && b.startsWith(e));
+    if (moreSpecific.length > 0) return false;
+    if (!b.startsWith(a)) return false;
     const nextChar = b[a.length];
     return !nextChar || nextChar === ' ';
   }
