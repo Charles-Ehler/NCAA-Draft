@@ -916,7 +916,8 @@ async function applyGameStats(summary, round) {
 // so that if the typo ever reappears it still matches ESPN.
 const NAME_CORRECTIONS = {
   'mason falsley':        'mason falslev',
-  'patrick ngongba iii':  'patrick ngongba ii'
+  'patrick ngongba iii':  'patrick ngongba ii',
+  'jalen bradley':        'jaden bradley'
 };
 
 function namesMatch(espnName, draftName) {
