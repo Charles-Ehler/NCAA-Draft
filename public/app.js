@@ -1709,51 +1709,49 @@ function generateCallouts() {
     }
   }
 
-  // ── TOURNAMENT CONTEXT CALLOUTS (verified: Final Four — Michigan, Arizona, Illinois, UConn) ──
-  // Standings: Charlie 526.3 (done) · Kyle 461.8 · Brian 416.1 · Andy 404.4 · Matt 350.6 (done)
-  // Active: Kyle — Lendeborg (154.3) + Johnson Jr (103.7) on Michigan
-  //         Brian — Mara (119.7) on Michigan
-  //         Andy  — Burries (112) + Bradley (90.7) on Arizona
+  // ── TOURNAMENT CONTEXT CALLOUTS (verified: Championship — Michigan vs UConn) ──
+  // Standings: Charlie 526.3 (frozen) · Kyle 503.3 · Brian 459.4 · Andy 443.8 (frozen) · Matt 350.6 (frozen)
+  // Active: Kyle — Lendeborg (172.4) + Johnson Jr (127.1) on Michigan
+  //         Brian — Mara (163) on Michigan
+  //         Michigan beat Arizona 91-73 in Final Four
   const ctx = [
-    // ── Charlie — frozen at the top ──
-    ['gold',    '🏆', `Charlie leads with 526.3 pts and zero players left. All five eliminated. Still winning. He watched his whole roster get knocked out and never lost the lead. That is either genius or dumb luck and nobody can tell which.`],
-    ['gold',    '🪑', `Charlie is watching the Final Four as a spectator with no stake in any team. Score locked at 526.3. Lead locked at 64.5 pts. His only job now is to sit there and hope Michigan and Arizona go cold. They will not.`],
-    ['gold',    '😤', `Charlie's lead over 2nd place is 64.5 pts. The entire gap between 2nd and 5th is 111 pts. The fully eliminated man is still comfortably in first. This draft is cooked and Charlie is the chef.`],
-    ['gold',    '🎪', `Charlie's winning strategy: draft two Seed 9 players, let the 2× multiplier print 343 pts, watch them both get eliminated, and coast to a 64.5-pt lead while everyone else scrambles. Repeatable? Probably not. Effective? Absolutely.`],
-    ['gold',    '🔒', `526.3 pts. Locked in. Done. Charlie cannot gain points and cannot lose points. He is the most powerful person in this draft and also the most useless. Peak fantasy sports.`],
-    // ── Stirtz and Falslev — the picks that won it ──
-    ['gold',    '⚡', `Bennett Stirtz scored 56, 57, 56.8, and 60.2 pts in four straight rounds. 230 pts total. Seed 9, 2× multiplier, four-round monster. The single best pick in this draft and it was not close.`],
-    ['gold',    '🧠', `Charlie drafted Stirtz as a Seed 9. Without the 2× multiplier Stirtz scores 115 pts. With it: 230. That 115-pt bonus alone is larger than the entire gap between 2nd and last. One rule. One pick. Whole draft.`],
-    ['gold',    '👻', `Mason Falslev: 68.8 pts in Round 1 — the highest single-round score in this draft. 113 pts total before going out in the Round of 32. Charlie got two Seed 9 phenoms. The odds of that happening to anyone else are infuriating.`],
-    ['gold',    '💸', `Stirtz (230) + Falslev (113) = 343 pts from two picks. The other three managers combined for 526 pts from fifteen picks. Two players almost matched fifteen. The 2× seed rule is the entire story of this draft.`],
-    // ── Kyle — the comeback story ──
-    ['blue',    '📈', `Kyle went from last place to 2nd. The guy everyone roasted for carrying Joshua Jefferson all tournament is now in 2nd place because Lendeborg and Johnson Jr play for Michigan and Michigan is in the Final Four.`],
-    ['blue',    '🚀', `Yaxel Lendeborg: 19.8, 37.2, 49.9, 47.4 pts per round. 154.3 total. Got better every single round. The second-highest scoring player in this entire draft. Kyle did not know this was coming. Nobody did.`],
-    ['blue',    '💰', `Kyle needs 64.6 pts from Lendeborg and Johnson Jr to catch Charlie. Lendeborg has averaged 48.7 pts per round in the last two rounds. Two more games. This race is alive. Kyle is very much in this.`],
-    ['crimson', '😂', `Kyle's five picks: Boozer (160.4), Lendeborg (154.3), Johnson Jr (103.7), Ngongba (40.2), Jefferson (3.2). The gap between his best and worst pick is 157 pts. The range on that roster is historically wide.`],
-    ['crimson', '💀', `Joshua Jefferson played one game in Round 1, scored 3.2 pts, and contributed nothing for the rest of the tournament. Kyle carried that body to 2nd place. Jefferson owes Kyle money. Specifically $50.`],
-    ['crimson', '🤡', `Kyle spent multiple rounds in last place getting roasted in these callouts. Kyle is now in 2nd. We take back nothing. He got lucky with Michigan. The roasting was deserved. The result is genuinely impressive.`],
-    // ── Brian — 3rd, one thread left ──
-    ['blue',    '🔥', `Brian is 3rd with 416.1 pts and one player standing: Aday Mara at 119.7 pts on Michigan. Mara is in the Final Four. One player. One thread. Brian is hanging on and somehow that thread keeps holding.`],
-    ['blue',    '💪', `Aday Mara gave Brian 41.4, 38.5, 22, and 17.8 pts across four rounds. Consistent, durable, still alive. Brian's workhorse got him this far on four rounds of steady production. One more game to go.`],
-    ['crimson', '🤔', `Brian trails Kyle by 45.7 pts. One player vs two. Both teams are Michigan. Brian needs Mara to outscore Lendeborg plus Johnson Jr combined. In the same game. For the same team. That math does not work for Brian.`],
-    ['blue',    '🤯', `Brian's Braden Smith: 116.4 pts across four rounds, Elite 8 run, eliminated by Arizona. Best run by any eliminated player in this draft outside Stirtz and Falslev. Brian bled every point out of that pick.`],
-    // ── Andy — two alive, need to chase Brian ──
-    ['blue',    '🏀', `Andy is 4th with 404.4 pts. Brayden Burries (112 pts) and Jalen Bradley (90.7 pts) are both alive on Arizona. Arizona is in the Final Four. Andy trails Brian by 11.7 pts. Two players vs one. This is the race.`],
-    ['blue',    '🎯', `Brayden Burries has scored 27, 28.8, 28, and 28.2 pts in four straight rounds. Relentlessly consistent. That steadiness is why Andy is still relevant in the Final Four when everyone expected him to fade.`],
-    ['crimson', '😬', `Andy trails Brian by 11.7 pts and has two players to Brian's one. If Arizona has a good game and Michigan has a quiet one, Andy takes 3rd. That is a very flippable gap. One box score could decide $50.`],
-    ['crimson', '💀', `AJ Dybantsa dropped 43.5 pts in Round 1 for Andy. BYU lost. Dybantsa was gone after one game. That was Andy's only elite-ceiling player. He has been scrapping with good-but-not-great ever since and is somehow still alive.`],
-    // ── Matt — done ──
-    ['crimson', '😔', `Matt is last with 350.6 pts and no one left. Ejiofor and Fears both got eliminated in the Sweet 16. Matt is watching the Final Four with Charlie — except Charlie is winning and Matt is just watching.`],
-    ['gold',    '💎', `Zuby Ejiofor: 38.2, 36.8, 39.6 pts in three rounds. The most consistent non-multiplier scorer in the draft. Gone when Duke eliminated St. John's in the Sweet 16. Matt got three rounds of clockwork production from that pick.`],
-    ['crimson', '🎭', `Jeremy Fears Jr dished 16 assists in a single game for Matt. Sixteen. The most unhinged stat line in this draft. Michigan State still lost to UConn. Fears had 36.6 pts that night and it did not matter. Basketball is brutal.`],
-    ['crimson', '😂', `Matt lost three picks before the Sweet 16, his survivors went deep, and he still finished last. He did not play badly. Everyone else just played better or had better seeds. Matt is the most respectable last-place finish possible.`],
-    // ── Final Four stakes ──
-    ['blue',    '📊', `Final Four rosters: Michigan — Lendeborg (Kyle), Johnson Jr (Kyle), Mara (Brian). Arizona — Burries (Andy), Bradley (Andy). Illinois and UConn have zero draft players. Three managers still playing for real money.`],
-    ['blue',    '💸', `The money race: Kyle (461.8) needs 64.6 pts to catch Charlie. Brian (416.1) and Andy (404.4) are 11.7 pts apart fighting for 3rd. Every rebound and assist in the Final Four now has a specific dollar value attached to it.`],
-    ['crimson', '🤝', `Michigan is the most important team in this draft. Kyle has two players there. Brian has one. Three managers are all cheering for the same team for completely different reasons and completely different amounts of money.`],
-    ['gold',    '🎯', `The 2× multiplier was the entire story of this draft. Charlie found it, used it twice, and banked 343 pts. Everyone else played a fundamentally different — and objectively worse — game without knowing it.`],
-    ['gold',    '🎪', `Michigan wins the championship: Kyle closes huge on Charlie, Brian hangs on to 3rd, Andy falls. Arizona wins: Andy jumps Brian for 3rd, Kyle still needs a monster Lendeborg game. Two paths. Two outcomes. One trophy.`],
+    // ── Charlie — 23 pts from losing everything ──
+    ['gold',    '🏆', `Charlie has 526.3 pts, zero active players, and a 23-pt lead going into the Championship. He built a 64.5-pt lead and Kyle has chipped it down to 23. Charlie is still winning but he is sweating now.`],
+    ['gold',    '😬', `Charlie's 64.5-pt lead has shrunk to 23 pts after Kyle's Michigan players went off in the Final Four. 23 pts is one big game from Lendeborg. Charlie can only watch. He cannot do anything. This is his nightmare.`],
+    ['gold',    '🔒', `526.3 pts. Frozen. Final. Charlie's score does not move. It just sits there while Michigan plays UConn for the national championship and Kyle gets closer by the minute.`],
+    ['gold',    '🎪', `Charlie's draft strategy produced the most efficient lead in this league's history and Kyle is about to erase it with two Michigan players in a championship game. Charlie did everything right and may still lose. Basketball.`],
+    // ── Stirtz and Falslev — what built the lead ──
+    ['gold',    '⚡', `Bennett Stirtz: 56, 57, 56.8, 60.2 pts in four rounds. 230 pts total. Seed 9, 2× multiplier, Elite 8 run. Without Stirtz, Charlie has 296 pts and is in dead last. One pick built this entire lead.`],
+    ['gold',    '👻', `Falslev and Stirtz combined for 343 pts with the 2× seed multiplier. Without the multiplier they score 171.5. That 171.5-pt bonus is Charlie's entire cushion. One rule. Two players. The whole draft decided.`],
+    ['gold',    '🧠', `Charlie found the 2× multiplier, used it on two Seed 9 players, and built a 64-pt lead that Kyle has now carved down to 23 heading into the Championship. The genius play almost held. Almost.`],
+    // ── Kyle — 23 pts from the title ──
+    ['blue',    '🚨', `Kyle trails Charlie by 23 pts entering the Championship game. He has two Michigan players. Aday Mara scored 43.3 pts for Brian in the Final Four from the same team. 23 pts is nothing. Kyle can win this.`],
+    ['blue',    '🚀', `Kyle went from dead last to 23 pts from first. Joshua Jefferson (3.2 pts total) is on his roster. Yaxel Lendeborg (172.4 pts) is also on his roster. The range on this man's picks is genuinely one for the ages.`],
+    ['blue',    '💰', `The math: Kyle needs Lendeborg and Johnson Jr to combine for 23.1 pts total in one game. That is 11.5 pts each. Johnson Jr scored 23.4 in the Final Four. This is extremely winnable. Kyle is the favorite to win this draft.`],
+    ['blue',    '📈', `Kyle was in last place after Round 2. Kyle is 23 pts from first with one game left. If you told anyone this at the start of the tournament they would have laughed. Nobody is laughing now. Not even Charlie.`],
+    ['crimson', '🤡', `Kyle spent the first half of this tournament getting clowned on in these callouts. Jefferson's 3.2 pts. Ngongba's DNP. We stand by every word. But Kyle is about to win $100 and the receipts are embarrassing for everyone who doubted him.`],
+    ['crimson', '💀', `Joshua Jefferson: 1 game, 3.2 pts, gone. He is the most useless player in this draft and Kyle is still about to win. Jefferson does not deserve a championship ring. Kyle does. These are different things.`],
+    // ── Brian — hanging on for 3rd with Mara ──
+    ['blue',    '🔥', `Aday Mara scored 26 pts, 9 reb, 3 ast, 2 blk in the Final Four for Brian. 43.3 fantasy pts in one game. If Mara does that again in the Championship, Brian finishes with 502+ and potentially pushes Kyle. Mara is absolutely capable.`],
+    ['blue',    '💪', `Brian's Mara: 41.4, 38.5, 22, 17.8, 43.3 pts per round. Five rounds. Still going. The most durable player in this draft. Brian has ridden one man from Round 1 to the Championship game and that man has never quit.`],
+    ['crimson', '🤔', `Brian trails Kyle by 43.9 pts with one player to Kyle's two. He needs Mara to outscore Lendeborg and Johnson Jr combined. In the Final Four, Mara outscored both of them. It is mathematically possible. It is also a big ask.`],
+    ['blue',    '😤', `Brian is playing for 3rd, not 1st. His route to beating Kyle requires Mara to have a 50-pt game while Lendeborg and Johnson Jr go quiet. Both on the same team. In the same game. Brian needs a miracle and Mara to know about it.`],
+    // ── Andy — frozen, watching the drama ──
+    ['crimson', '😔', `Andy finished 4th with 443.8 pts. Burries (136.7) and Bradley (105.4) both went down with Arizona in the Final Four. Michigan beat them 91-73. Andy's run is over. He watches the Championship with nothing at stake but pride.`],
+    ['blue',    '🎯', `Andy's Brayden Burries was the most consistent player in this draft game-by-game. 27, 28.8, 28, 28.2, 24.7 across five rounds. Clockwork. He just ran into Michigan and that was the end of that.`],
+    ['crimson', '💀', `AJ Dybantsa scored 43.5 pts in Round 1 and got immediately eliminated. That was Andy's only path to winning. It closed in the first weekend. Andy played solid basketball for five rounds and finished 4th. Sometimes solid is not enough.`],
+    ['crimson', '😂', `Andy lost the Final Four to Kyle's Michigan team. The two players that knocked Andy out — Lendeborg and Johnson Jr — are now 23 pts away from winning the whole draft. Andy got eliminated by the guy who wins. That is almost a compliment.`],
+    // ── Matt — done and watching ──
+    ['crimson', '😔', `Matt is last with 350.6 pts. All five eliminated before the Final Four. He is watching the Championship with Charlie and Andy — three guys in the same boat, just hoping whoever wins buys a round.`],
+    ['gold',    '💎', `Zuby Ejiofor: 38.2, 36.8, 39.6 pts in three straight rounds for Matt. The most consistent non-multiplier scorer in this draft. Out in the Sweet 16. Matt's best player was a machine that just stopped one round too early.`],
+    ['crimson', '🎭', `Jeremy Fears Jr dished 16 assists in a single game. The most unhinged individual performance in this draft. Michigan State still lost. Fears' 36.6-pt effort is a monument to basketball cruelty. Matt deserved better.`],
+    // ── Championship picture ──
+    ['blue',    '📊', `Championship stakes: Kyle 503.3 vs Charlie 526.3 — gap is 23 pts. Brian 459.4 vs Andy 443.8 — gap is 15.6. Two races in one game. Michigan vs UConn is deciding this entire draft.`],
+    ['blue',    '💸', `Kyle needs 23.1 pts from Lendeborg + Johnson Jr. Brian needs Mara to outscore both of them combined. Andy and Matt and Charlie can only watch. Four of five managers have their entire tournament riding on Michigan tonight.`],
+    ['crimson', '🤝', `Three managers are rooting for Michigan in the Championship. Kyle wants them to score enough to win the draft. Brian wants Mara specifically to go nuclear. Charlie wants them to score exactly 22 pts combined and then stop. Fascinating vibes.`],
+    ['gold',    '🎯', `The 2× multiplier built Charlie's lead. Michigan's run destroyed it. One scoring rule and one tournament run are the two things that actually decided this entire draft. Everything else was noise.`],
+    ['gold',    '🎪', `If Michigan wins the championship: Kyle almost certainly wins the draft. Brian survives in 3rd. Andy stays 4th. Matt stays last. Charlie wins nothing but he still wins first. One game. The whole thing.`],
+    ['crimson', '😤', `Charlie built a dominant lead, watched it get carved from 64.5 to 23 pts in one night, and now has to hope UConn beats Michigan in the Championship to save his trophy. His fate is entirely in UConn's hands. Rough.`],
   ];
 
   for (const [type, emoji, text] of ctx) {
